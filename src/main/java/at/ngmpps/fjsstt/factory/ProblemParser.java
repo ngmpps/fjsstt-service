@@ -1,6 +1,5 @@
 package at.ngmpps.fjsstt.factory;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -31,22 +30,218 @@ public class ProblemParser {
 	public static String PROBLEM_FILE_EXTENSION = "fjs";
 	public static String TRANSPORT_FILE_EXTENSION = "transport";
 	public static String CONFIG_FILE_EXTENSION = "properties";
-	
+
 	public static final String SEARCH_TYPE_KEY = "SubgradientSearch.SearchType";
 	public static final String SEARCH_NR_TIME_SLOTS_KEY = "SubgradientSearch.NrTimeSlots";
 	public static final String TRANSPORT_FILE_KEY = "SubgradientSearch.TransportFile";
 
+	/**
+	 * Checks if the Given File is OK or if not searches for that file
+	 * 
+	 * @param fileOrFolderPath
+	 *           may be the path to a file or to a folder, if the latter then the
+	 *           fileExtension is used to get a list of files
+	 * @param fileExtension
+	 * @return
+	 */
+	public static List<File> checkOrFindFile(final File fileOrFolderPath, final String fileExtension) {
+		List<File> files = new ArrayList<File>();
+		if (fileOrFolderPath != null) {
+			File found = fileOrFolderPath;
+			if (!found.canRead()) {
+				// :( ... use class loader to resolve that file
+				final URL file = ProblemParser.class.getClassLoader().getResource(found.getAbsolutePath().toString());
+				if (file != null) {
+					try {
+						found = new File(file.toURI());
+						if (!found.canRead())
+							found = null;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
+			}
+
+			if (found != null && found.isDirectory()) {
+				// we received a directory. try to find the right file in this
+				// directory
+				try {
+					for (File subfile : found.listFiles()) {
+						if (!subfile.isDirectory()) {
+							String problemName = subfile.toString();
+							if (problemName.endsWith(fileExtension)) {
+								files.add(subfile);
+							}
+						}
+					}
+				} catch (Exception e) {
+
+				}
+			} else if (found != null && found.isFile()) {
+				files.add(found);
+			}
+		}
+		return files;
+	}
+	public static List<File> findConfigurationFiles(File problemFilePath) throws IOException {
+		return findFiles(problemFilePath, CONFIG_FILE_EXTENSION);
+	}
+
+	/**
+	 * Takes a File or Folder as input and searches for files in the same folder
+	 * with the given extensions for the first case (File) search for files with
+	 * given extension and where the name starts equal to the given file
+	 * WT1.fjs,properties -> WT1a.properties, WT1b.properties
+	 * 
+	 * @param problemFilePath
+	 * @param someOtherFileExtension
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<File> findFiles(File fileOrPath, String someOtherFileExtension) throws IOException {
+		String FilePathName = null;
+		File folder = null;
+		ArrayList<File> resultFiles = new ArrayList<File>();
+		File problemFilePath = fileOrPath;
+		if (problemFilePath != null && !problemFilePath.canRead()) {
+			// this checks the filename and eventually uses the classpathloader
+			List<File> found = checkOrFindFile(problemFilePath, someOtherFileExtension);
+			if (found != null && found.size() > 0)
+				problemFilePath = found.get(0);
+		}
+
+		if (problemFilePath != null && problemFilePath.canRead()) {
+			// its a file using that format name.ext
+			if (problemFilePath.toString().lastIndexOf(".") > problemFilePath.toString().lastIndexOf(File.separatorChar)) {
+				// all transport files starting with the same name
+				FilePathName = problemFilePath.toString().substring(0, problemFilePath.toString().lastIndexOf('.'));
+				// search in this folder for files that start with FilePathName and
+				// end with .transport
+				folder = problemFilePath.getParentFile();
+			} else if (problemFilePath.isDirectory()) {
+				// its a Folder!
+				folder = problemFilePath;
+				// all transport files in this folder
+				FilePathName = problemFilePath.toString();
+			}
+			// we have selected WT1.fjs and want to find WT1a.properties &&
+			// WT1b.properties, but not WT2.properties
+			// alse
+			// we have selected WT1a.properties and want to find WT1.fjs but not
+			// WT2.fjs
+			if (folder != null) {
+				int substring = FilePathName.length();
+				int folderCharPos = Math.max(FilePathName.lastIndexOf(File.separatorChar), 0);
+				for (int s = substring; s > folderCharPos; s--) {
+					for (File file : folder.listFiles()) {
+						String fn = file.toString();
+						if (fn.endsWith(someOtherFileExtension) && fn.startsWith(FilePathName))
+							resultFiles.add(file);
+					}
+					if (resultFiles.isEmpty())
+						FilePathName = FilePathName.substring(0, s - 1);
+					else
+						s = folderCharPos;
+				}
+			}
+		}
+
+		return resultFiles;
+	}
+	public static List<File> findProblemFiles(File problemFilePath) throws IOException {
+		return findFiles(problemFilePath, ProblemParser.PROBLEM_FILE_EXTENSION);
+	}
+
+	public static List<File> findTransportFiles(File problemFilePath) throws IOException {
+		return findFiles(problemFilePath, TRANSPORT_FILE_EXTENSION);
+	}
+	public static boolean getPropertyBool(Properties config, String key) {
+		if (config.containsKey(key)) {
+			String prop = config.getProperty(key);
+			if (prop == null || prop.isEmpty()) {
+				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
+				return false;
+			}
+			return Boolean.parseBoolean(trimm(config.getProperty(key)));
+		}
+		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
+		return false;
+	}
+
+	public static double getPropertyDouble(Properties config, String key) {
+		if (config.containsKey(key)) {
+			String prop = config.getProperty(key);
+			if (prop == null || prop.isEmpty()) {
+				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
+				return 0.0;
+			}
+			return Double.parseDouble(trimm(prop));
+		}
+		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
+		return 0.0;
+	}
+
+	public static int getPropertyInt(Properties config, String key) {
+		if (config.containsKey(key)) {
+
+			String prop = config.getProperty(key);
+			if (prop == null || prop.isEmpty()) {
+				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
+				return 0;
+			}
+			return Integer.parseInt(trimm(prop));
+		}
+		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
+		return 0;
+	}
+
+	public static String getPropertyString(Properties config, String key) {
+		if (config.containsKey(key)) {
+			String prop = config.getProperty(key);
+			if (prop == null || prop.isEmpty()) {
+				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
+				return "";
+			}
+			return trimm(config.getProperty(key));
+		}
+		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
+		return "";
+	}
+
+	public static FJSSTTproblem parseFile(final File file) throws URISyntaxException, IOException {
+		final ProblemParser parse = new ProblemParser(file);
+		return parse.parse();
+	}
+	public static FJSSTTproblem parseFile(final String filename) throws URISyntaxException, IOException {
+		return parseFile(new File(filename));
+	}
+	public static String trimm(String string) {
+		// break at first non space char
+		int i, ii;
+		for (i = string.length() - 1; i > 0; --i)
+			if (string.charAt(i) != ' ')
+				break;
+		for (ii = 0; ii < i; ++ii)
+			if (string.charAt(ii) != ' ')
+				break;
+		return string.substring(ii, i + 1);
+	}
+
 	// file to pares
 	File problemFile;
+
 	Properties configuration = new Properties();
 	// File file;
 
 	// Objective is to fill to be able to create a FJSSTT_problem
 	int jobs;
+
 	int machines;
 
 	// perJob
 	int[] operations;
+
 	int maxOperations;
 
 	// make timeslots in the problem the maxDueDate found in the files
@@ -62,35 +257,50 @@ public class ProblemParser {
 	int[][][] processTimes;
 
 	int[][] travelTimes;
+
 	// per job
 	int[] dueDates;
+
 	// job priorities
 	int[] jobWeights;
 
 	// default objective function for parsed files
 	Objective objective = Objective.TARDINESS;
 
-	public static FJSSTTproblem parseFile(final String filename) throws URISyntaxException, IOException {
-		return parseFile(new File(filename));
-	}
-
-	public static FJSSTTproblem parseFile(final File file) throws URISyntaxException, IOException {
-		final ProblemParser parse = new ProblemParser(file);
-		return parse.parse();
+	public ProblemParser(final File file) {
+		this.problemFile = file;
 	}
 
 	public ProblemParser(final String filename) {
 		this(new File(filename));
 	}
 
-	public ProblemParser(final File file) {
-		this.problemFile = file;
+	public FJSSTTproblem getProblem() {
+		return new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines, processTimes, travelTimes,
+				dueDates, objective, jobWeights, configuration);
+	}
+
+	public boolean getPropertyBool(String key) {
+		return getPropertyBool(configuration, key);
+	}
+
+	public double getPropertyDouble(String key) {
+		return getPropertyDouble(configuration, key);
+	}
+
+	public int getPropertyInt(String key) {
+		return getPropertyInt(configuration, key);
+	}
+
+	public String getPropertyString(String key) {
+		return getPropertyString(configuration, key);
 	}
 
 	/**
-	 * Checks if the problemFile is readable and parses it; additionally it searches for properties files (the config)
-	 * and takes one of the found files. That file is used to check if it contains the link to the transport file
-	 * (SubgradientSearch.TRANSPORT_FILE_KEY); if so its parsed
+	 * Checks if the problemFile is readable and parses it; additionally it
+	 * searches for properties files (the config) and takes one of the found
+	 * files. That file is used to check if it contains the link to the transport
+	 * file (SubgradientSearch.TRANSPORT_FILE_KEY); if so its parsed
 	 * 
 	 * @return
 	 */
@@ -116,106 +326,6 @@ public class ProblemParser {
 			ioe.printStackTrace();
 		}
 		return null;
-	}
-
-	public FJSSTTproblem getProblem() {
-		return new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines,
-				processTimes, travelTimes, dueDates, objective, jobWeights, configuration);
-	}
-
-	public Properties parsePropertiesFile(File properties) throws IOException {
-		// parse propertiesfile ([problem].conf) and add to problem
-		List<File> found = checkOrFindFile(properties, CONFIG_FILE_EXTENSION);
-		if (found.size() > 0)
-			properties = found.get(0);
-		if (properties != null && properties.canRead()) {
-			configuration = new Properties();
-			configuration.load(new FileReader(properties));
-			return configuration;
-		} else {
-			configuration = null;
-		}
-		return null;
-	}
-
-	public int getPropertyInt(String key) {
-		return getPropertyInt(configuration, key);
-	}
-
-	public static int getPropertyInt(Properties config, String key) {
-		if (config.containsKey(key)) {
-
-			String prop = config.getProperty(key);
-			if (prop == null || prop.isEmpty()) {
-				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
-				return 0;
-			}
-			return Integer.parseInt(trimm(prop));
-		}
-		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
-		return 0;
-	}
-
-	public double getPropertyDouble(String key) {
-		return getPropertyDouble(configuration, key);
-	}
-
-	public static double getPropertyDouble(Properties config, String key) {
-		if (config.containsKey(key)) {
-			String prop = config.getProperty(key);
-			if (prop == null || prop.isEmpty()) {
-				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
-				return 0.0;
-			}
-			return Double.parseDouble(trimm(prop));
-		}
-		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
-		return 0.0;
-	}
-
-	public String getPropertyString(String key) {
-		return getPropertyString(configuration, key);
-	}
-
-	public static String getPropertyString(Properties config, String key) {
-		if (config.containsKey(key)) {
-			String prop = config.getProperty(key);
-			if (prop == null || prop.isEmpty()) {
-				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
-				return "";
-			}
-			return trimm(config.getProperty(key));
-		}
-		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
-		return "";
-	}
-	public boolean getPropertyBool(String key) {
-		return getPropertyBool(configuration, key);
-	}
-
-	public static boolean getPropertyBool(Properties config, String key) {
-		if (config.containsKey(key)) {
-			String prop = config.getProperty(key);
-			if (prop == null || prop.isEmpty()) {
-				logger.error("Property Key {0} is empty in Config {1}.", key, config.toString());
-				return false;
-			}
-			return Boolean.parseBoolean(trimm(config.getProperty(key)));
-		}
-		logger.error("Property Key {0} not found in Config {1}.", key, config.toString());
-		return false;
-	}
-
-	public static String trimm(String string) {
-		// break at first non space char
-		int i, ii;
-		for (i = string.length() - 1; i > 0; --i)
-			if (string.charAt(i) != ' ')
-				break;
-		for (ii = 0; ii < i; ++ii)
-			if (string.charAt(ii) != ' ')
-				break;
-		return string.substring(ii, i + 1);
 	}
 
 	public File parseProblemFile() throws IOException {
@@ -274,8 +384,7 @@ public class ProblemParser {
 				jobWeights[j] = new Integer(operationsLine.group(5));
 
 				// parse line
-				final Matcher operationsProcessTimes = ProblemParser.operationsProcessesPattern
-						.matcher(operationsForJob);
+				final Matcher operationsProcessTimes = ProblemParser.operationsProcessesPattern.matcher(operationsForJob);
 
 				// parse per job per operation
 				processTimes[j] = new int[operations[j]][];
@@ -309,136 +418,27 @@ public class ProblemParser {
 		return problemFile;
 	}
 
-	public static List<File> findConfigurationFiles(File problemFilePath) throws IOException {
-		return findFiles(problemFilePath, CONFIG_FILE_EXTENSION);
-	}
-
-	public static List<File> findTransportFiles(File problemFilePath) throws IOException {
-		return findFiles(problemFilePath, TRANSPORT_FILE_EXTENSION);
-	}
-
-	public static List<File> findProblemFiles(File problemFilePath) throws IOException {
-		return findFiles(problemFilePath, ProblemParser.PROBLEM_FILE_EXTENSION);
-	}
-
-	/**
-	 * Checks if the Given File is OK or if not searches for that file
-	 * 
-	 * @param fileOrFolderPath
-	 *            may be the path to a file or to a folder, if the latter then the fileExtension is used to get a list
-	 *            of files
-	 * @param fileExtension
-	 * @return
-	 */
-	public static List<File> checkOrFindFile(final File fileOrFolderPath, final String fileExtension) {
-		List<File> files = new ArrayList<File>();
-		if (fileOrFolderPath != null) {
-			File found = fileOrFolderPath;
-			if (!found.canRead()) {
-				// :( ... use class loader to resolve that file
-				final URL file = ProblemParser.class.getClassLoader().getResource(found.getAbsolutePath().toString());
-				if (file != null) {
-					try {
-						found = new File(file.toURI());
-						if (!found.canRead())
-							found = null;
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-
-			}
-
-			if (found != null && found.isDirectory()) {
-				// we received a directory. try to find the right file in this
-				// directory
-				try {
-					for (File subfile : found.listFiles()) {
-						if (!subfile.isDirectory()) {
-							String problemName = subfile.toString();
-							if (problemName.endsWith(fileExtension)) {
-								files.add(subfile);
-							}
-						}
-					}
-				} catch (Exception e) {
-
-				}
-			} else if (found != null && found.isFile()) {
-				files.add(found);
-			}
+	public Properties parsePropertiesFile(File properties) throws IOException {
+		// parse propertiesfile ([problem].conf) and add to problem
+		List<File> found = checkOrFindFile(properties, CONFIG_FILE_EXTENSION);
+		if (found.size() > 0)
+			properties = found.get(0);
+		if (properties != null && properties.canRead()) {
+			configuration = new Properties();
+			configuration.load(new FileReader(properties));
+			return configuration;
+		} else {
+			configuration = null;
 		}
-		return files;
-	}
-
-	/**
-	 * Takes a File or Folder as input and searches for files in the same folder with the given extensions for the first
-	 * case (File) search for files with given extension and where the name starts equal to the given file
-	 * WT1.fjs,properties -> WT1a.properties, WT1b.properties
-	 * 
-	 * @param problemFilePath
-	 * @param someOtherFileExtension
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<File> findFiles(File fileOrPath, String someOtherFileExtension) throws IOException {
-		String FilePathName = null;
-		File folder = null;
-		ArrayList<File> resultFiles = new ArrayList<File>();
-		File problemFilePath = fileOrPath;
-		if (problemFilePath != null && !problemFilePath.canRead()) {
-			// this checks the filename and eventually uses the classpathloader
-			List<File> found = checkOrFindFile(problemFilePath, someOtherFileExtension);
-			if (found != null && found.size() > 0)
-				problemFilePath = found.get(0);
-		}
-
-		if (problemFilePath != null && problemFilePath.canRead()) {
-			// its a file using that format name.ext
-			if (problemFilePath.toString().lastIndexOf(".") > problemFilePath.toString()
-					.lastIndexOf(File.separatorChar)) {
-				// all transport files starting with the same name
-				FilePathName = problemFilePath.toString().substring(0, problemFilePath.toString().lastIndexOf('.'));
-				// search in this folder for files that start with FilePathName and end with .transport
-				folder = problemFilePath.getParentFile();
-			} else if (problemFilePath.isDirectory()) {
-				// its a Folder!
-				folder = problemFilePath;
-				// all transport files in this folder
-				FilePathName = problemFilePath.toString();
-			}
-			// we have selected WT1.fjs and want to find WT1a.properties && WT1b.properties, but not WT2.properties
-			// alse
-			// we have selected WT1a.properties and want to find WT1.fjs but not WT2.fjs
-			if (folder != null) {
-				int substring = FilePathName.length();
-				int folderCharPos = Math.max(FilePathName.lastIndexOf(File.separatorChar), 0);
-				for (int s = substring; s > folderCharPos; s--) {
-					for (File file : folder.listFiles()) {
-						String fn = file.toString();
-						if (fn.endsWith(someOtherFileExtension) && fn.startsWith(FilePathName))
-							resultFiles.add(file);
-					}
-					if (resultFiles.isEmpty())
-						FilePathName = FilePathName.substring(0, s - 1);
-					else
-						s = folderCharPos;
-				}
-			}
-		}
-
-		return resultFiles;
+		return null;
 	}
 
 	public File parseTransportTimes() throws IOException {
 		File file = null;
 		if (configuration != null && configuration.containsKey(TRANSPORT_FILE_KEY)) {
 			String tpfile = configuration.getProperty(TRANSPORT_FILE_KEY);
-			if (tpfile != null && !tpfile.isEmpty() && !tpfile.equals(" ") && !tpfile.equals("  ")
-					&& !tpfile.equals("   ")) {
-				List<File> transpFile = findFiles(
-						new File(problemFile.getParentFile() + File.separator + tpfile),
-						TRANSPORT_FILE_EXTENSION);
+			if (tpfile != null && !tpfile.isEmpty() && !tpfile.equals(" ") && !tpfile.equals("  ") && !tpfile.equals("   ")) {
+				List<File> transpFile = findFiles(new File(problemFile.getParentFile() + File.separator + tpfile), TRANSPORT_FILE_EXTENSION);
 				if (transpFile != null && transpFile.size() > 0) {
 					file = transpFile.get(0);
 					parseTransportTimes(file);
@@ -448,15 +448,6 @@ public class ProblemParser {
 		return file;
 	}
 
-	public void parseTransportTimes(String pathToFile) throws IOException {
-		List<File> transpFile = findFiles(
-				new File(pathToFile),
-				TRANSPORT_FILE_EXTENSION);
-		if (transpFile != null && transpFile.size() > 0) {
-			File file = transpFile.get(0);
-			parseTransportTimes(file);
-		}
-	}
 	public void parseTransportTimes(File transportFile) throws IOException {
 
 		boolean initTravelTimes = false;
@@ -489,6 +480,14 @@ public class ProblemParser {
 					travelTimes[i][ii] = 0;
 				}
 			}
+		}
+	}
+
+	public void parseTransportTimes(String pathToFile) throws IOException {
+		List<File> transpFile = findFiles(new File(pathToFile), TRANSPORT_FILE_EXTENSION);
+		if (transpFile != null && transpFile.size() > 0) {
+			File file = transpFile.get(0);
+			parseTransportTimes(file);
 		}
 	}
 }

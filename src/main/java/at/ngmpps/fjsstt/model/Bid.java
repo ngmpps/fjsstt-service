@@ -1,6 +1,5 @@
 package at.ngmpps.fjsstt.model;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The data structure for a job's bid in an auction. A bid consists of the job ID, the price and a list of tuples (assigned machine, time slot) with
- * time slots occupied by the job operations. The price is the optimal cost of a one job scheduling problem. Furthermore the bid holds the optimal
- * machine assignments and beginning times for the operations. So a bid is a comprehensive representation of a solution for a one job scheduling
- * problem.
+ * The data structure for a job's bid in an auction. A bid consists of the job
+ * ID, the price and a list of tuples (assigned machine, time slot) with time
+ * slots occupied by the job operations. The price is the optimal cost of a one
+ * job scheduling problem. Furthermore the bid holds the optimal machine
+ * assignments and beginning times for the operations. So a bid is a
+ * comprehensive representation of a solution for a one job scheduling problem.
  * 
  * @author ahaemm
  * 
@@ -20,12 +21,19 @@ import org.slf4j.LoggerFactory;
 public class Bid {
 
 	/**
+	 * Logger configuration in NgMPPS/src/logback.xml, e.g. to switch between
+	 * info / debug level.
+	 */
+	final static Logger mLogger = LoggerFactory.getLogger(Bid.class);
+
+	/**
 	 * The unique ID of the job issuing the bid.
 	 */
 	final private int jobID;
 
 	/**
-	 * The price the job is willing to pay. This is exactly the minimum total cost computed for the single job's scheduling problem.
+	 * The price the job is willing to pay. This is exactly the minimum total
+	 * cost computed for the single job's scheduling problem.
 	 */
 	private double price;
 
@@ -44,11 +52,6 @@ public class Bid {
 	 */
 	private final int[] optimumBeginTimes;
 
-	/**
-	 * Logger configuration in NgMPPS/src/logback.xml, e.g. to switch between info / debug level.
-	 */
-	final static Logger mLogger = LoggerFactory.getLogger(Bid.class);
-
 	public Bid(final int id, final double price, final int[] optimumMachines, final int[] optimumBeginTimes) {
 		this.jobID = id;
 		this.price = price;
@@ -61,20 +64,15 @@ public class Bid {
 		return jobID;
 	}
 
-	public double getPrice() {
-		return price;
+	public List<int[]> getOccupiedTimeSlots() {
+		return occupiedTimeSlots;
 	}
 
 	/**
-	 * @param mPrice
-	 *            the mPrice to set
+	 * @return the mOptimumBeginTimes
 	 */
-	public void setPrice(final double mPrice) {
-		this.price = mPrice;
-	}
-
-	public List<int[]> getOccupiedTimeSlots() {
-		return occupiedTimeSlots;
+	public int[] getOptimumBeginTimes() {
+		return optimumBeginTimes;
 	}
 
 	/**
@@ -84,11 +82,8 @@ public class Bid {
 		return optimumMachines;
 	}
 
-	/**
-	 * @return the mOptimumBeginTimes
-	 */
-	public int[] getOptimumBeginTimes() {
-		return optimumBeginTimes;
+	public double getPrice() {
+		return price;
 	}
 
 	public void print(String string) {
@@ -102,6 +97,14 @@ public class Bid {
 		for (int i = 0; i < optimumBeginTimes.length; i++) {
 			mLogger.info(i + ", " + optimumBeginTimes[i]);
 		}
+	}
+
+	/**
+	 * @param mPrice
+	 *           the mPrice to set
+	 */
+	public void setPrice(final double mPrice) {
+		this.price = mPrice;
 	}
 
 }

@@ -1,6 +1,5 @@
 package at.ngmpps.fjsstt.model;
 
-
 import java.util.List;
 import java.util.Random;
 
@@ -20,7 +19,8 @@ public class Solution {
 	double objectiveValue;
 
 	/**
-	 * The job bids, each one representing the solution of a job-level subproblem. Indices are jobs.
+	 * The job bids, each one representing the solution of a job-level
+	 * subproblem. Indices are jobs.
 	 */
 	final Bid[] bids;
 
@@ -40,12 +40,14 @@ public class Solution {
 	int iteration;
 
 	/**
-	 * The subgradient values resulting from mOperationsBeginTimes and mOperationsMachineAssignments.
+	 * The subgradient values resulting from mOperationsBeginTimes and
+	 * mOperationsMachineAssignments.
 	 */
 	final int[][] subgradients;
 
 	/**
-	 * The vector of strictly positive Lagrange multipliers that led to the solution.
+	 * The vector of strictly positive Lagrange multipliers that led to the
+	 * solution.
 	 */
 	final double[][] multipliers;
 
@@ -82,8 +84,7 @@ public class Solution {
 				final int[] machineAssignments = bid.getmOptimumMachines();
 				final int[] beginTimes = bid.getmOptimumBeginTimes();
 
-				System.arraycopy(machineAssignments, 0, this.operationsMachineAssignments[job], 0,
-						machineAssignments.length);
+				System.arraycopy(machineAssignments, 0, this.operationsMachineAssignments[job], 0, machineAssignments.length);
 				System.arraycopy(beginTimes, 0, this.operationsBeginTimes[job], 0, beginTimes.length);
 			}
 		} else {
@@ -98,17 +99,18 @@ public class Solution {
 	}
 
 	/**
-	 * Constructor used by ListScheduling, so that it can return a real Solution and not just a String[][]. Problems:
-	 * ListScheduling does not know in which iteration it is called, so it cannot set mIteration. Both bids and
-	 * subgradients are not important for ListScheduling and - to my knowledge- need not be set.
+	 * Constructor used by ListScheduling, so that it can return a real Solution
+	 * and not just a String[][]. Problems: ListScheduling does not know in which
+	 * iteration it is called, so it cannot set mIteration. Both bids and
+	 * subgradients are not important for ListScheduling and - to my knowledge-
+	 * need not be set.
 	 */
-	public Solution(final FJSSTTproblem problem, final double objectiveValue, final int[][] begTimes,
-			final int[][] machAss) {
+	public Solution(final FJSSTTproblem problem, final double objectiveValue, final int[][] begTimes, final int[][] machAss) {
 		this(problem, objectiveValue, begTimes, machAss, 0);
 	}
 
-	public Solution(final FJSSTTproblem problem, final double objectiveValue, final int[][] begTimes,
-			final int[][] machAss, final int iteration) {
+	public Solution(final FJSSTTproblem problem, final double objectiveValue, final int[][] begTimes, final int[][] machAss,
+			final int iteration) {
 		this.problem = problem;
 		this.objectiveValue = objectiveValue;
 		this.bids = null;
@@ -119,43 +121,6 @@ public class Solution {
 		this.subgradients = null;
 		this.multipliers = null;
 		createInitialInfeasibleSolution();
-	}
-
-	/**
-	 * TODO: javadoc!
-	 * 
-	 * @return
-	 */
-	protected Solution createInitialInfeasibleSolution() {
-		if (problem != null
-				&& (objectiveValue == -1 || objectiveValue == Double.NEGATIVE_INFINITY
-						|| objectiveValue == Double.POSITIVE_INFINITY || objectiveValue == Double.MAX_VALUE || objectiveValue == Double.MIN_VALUE)) {
-			
-			for (int i = 0; i < problem.getJobs(); i++) {
-				for (int j = 0; j < problem.getOperations()[i]; j++) {
-					if (j == 0) {
-						setOperationsBeginTimes(i, j, j);
-						final List<Integer> H_ij = problem.getAltMachines(i, j);
-						Random r = new Random();
-						int machine = r.nextInt(H_ij.size());
-						setOperationsMachineAssignments(i, j, H_ij.get(machine));
-						
-					} else {
-						setOperationsBeginTimes(i, j, getOperationsBeginTimes()[i][j-1] + 
-								problem.getProcessTimes()[i][j - 1][getOperationsMachineAssignments()[i][j - 1]]);
-						final List<Integer> H_ij = problem.getAltMachines(i, j);
-						Random r = new Random();
-						int machine = r.nextInt(H_ij.size());
-						setOperationsMachineAssignments(i, j, H_ij.get(machine));
-					}
-				}
-				// H_ij.iterator().next() simply takes the first one. code below also; no need to create iterator
-				// mInfeasibleSolution.setmOperationsMachineAssignments(i, j, H_ij.iterator().next());
-
-			}
-
-		}
-		return this;
 	}
 
 	public Solution clone() {
@@ -173,10 +138,49 @@ public class Solution {
 	}
 
 	/**
-	 * Checks if two solutions are equal. The check only considers machine assignments and begin times.
+	 * TODO: javadoc!
+	 * 
+	 * @return
+	 */
+	protected Solution createInitialInfeasibleSolution() {
+		if (problem != null && (objectiveValue == -1 || objectiveValue == Double.NEGATIVE_INFINITY
+				|| objectiveValue == Double.POSITIVE_INFINITY || objectiveValue == Double.MAX_VALUE || objectiveValue == Double.MIN_VALUE)) {
+
+			for (int i = 0; i < problem.getJobs(); i++) {
+				for (int j = 0; j < problem.getOperations()[i]; j++) {
+					if (j == 0) {
+						setOperationsBeginTimes(i, j, j);
+						final List<Integer> H_ij = problem.getAltMachines(i, j);
+						Random r = new Random();
+						int machine = r.nextInt(H_ij.size());
+						setOperationsMachineAssignments(i, j, H_ij.get(machine));
+
+					} else {
+						setOperationsBeginTimes(i, j, getOperationsBeginTimes()[i][j - 1]
+								+ problem.getProcessTimes()[i][j - 1][getOperationsMachineAssignments()[i][j - 1]]);
+						final List<Integer> H_ij = problem.getAltMachines(i, j);
+						Random r = new Random();
+						int machine = r.nextInt(H_ij.size());
+						setOperationsMachineAssignments(i, j, H_ij.get(machine));
+					}
+				}
+				// H_ij.iterator().next() simply takes the first one. code below
+				// also; no need to create iterator
+				// mInfeasibleSolution.setmOperationsMachineAssignments(i, j,
+				// H_ij.iterator().next());
+
+			}
+
+		}
+		return this;
+	}
+
+	/**
+	 * Checks if two solutions are equal. The check only considers machine
+	 * assignments and begin times.
 	 * 
 	 * @param sol
-	 *            The solution to be compared to.
+	 *           The solution to be compared to.
 	 * @return True if the solutions are equal.
 	 */
 	public boolean equals(Solution sol) {
@@ -189,17 +193,6 @@ public class Solution {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * @return the mObjectiveValue
-	 */
-	public double getObjectiveValue() {
-		return objectiveValue;
-	}
-
-	public void setObjectiveValue(double newvalue) {
-		objectiveValue = newvalue;
 	}
 
 	/**
@@ -216,8 +209,15 @@ public class Solution {
 		return iteration;
 	}
 
-	public void setIteration(int bestvaluefoundiniteration) {
-		iteration = bestvaluefoundiniteration;
+	public double[][] getMultipliers() {
+		return multipliers;
+	}
+
+	/**
+	 * @return the mObjectiveValue
+	 */
+	public double getObjectiveValue() {
+		return objectiveValue;
 	}
 
 	/**
@@ -227,19 +227,11 @@ public class Solution {
 		return operationsBeginTimes;
 	}
 
-	public void setOperationsBeginTimes(final int job, final int op, final int time) {
-		operationsBeginTimes[job][op] = time;
-	}
-
 	/**
 	 * @return the mOperationsMachineAssignments
 	 */
 	public int[][] getOperationsMachineAssignments() {
 		return operationsMachineAssignments;
-	}
-
-	public void setOperationsMachineAssignments(final int job, final int op, final int time) {
-		operationsMachineAssignments[job][op] = time;
 	}
 
 	/**
@@ -249,7 +241,19 @@ public class Solution {
 		return subgradients;
 	}
 
-	public double[][] getMultipliers() {
-		return multipliers;
+	public void setIteration(int bestvaluefoundiniteration) {
+		iteration = bestvaluefoundiniteration;
+	}
+
+	public void setObjectiveValue(double newvalue) {
+		objectiveValue = newvalue;
+	}
+
+	public void setOperationsBeginTimes(final int job, final int op, final int time) {
+		operationsBeginTimes[job][op] = time;
+	}
+
+	public void setOperationsMachineAssignments(final int job, final int op, final int time) {
+		operationsMachineAssignments[job][op] = time;
 	}
 }
