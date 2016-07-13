@@ -1,4 +1,4 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem.subproblem;
 
 /**
  * The interface to be implemented by any algorithm solving the subproblems.

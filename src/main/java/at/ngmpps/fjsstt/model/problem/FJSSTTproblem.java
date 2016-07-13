@@ -1,4 +1,4 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -10,6 +10,8 @@ import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import at.ngmpps.fjsstt.model.problem.subproblem.SubproblemInstance;
 
 /**
  * Implements an instance of the flexible job shop scheduling problem with

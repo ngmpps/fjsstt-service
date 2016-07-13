@@ -1,4 +1,4 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem.subproblem;
 
 import java.io.Serializable;
 import java.util.Properties;

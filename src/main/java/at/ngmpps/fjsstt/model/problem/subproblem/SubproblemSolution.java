@@ -1,11 +1,11 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem.subproblem;
 
 import java.io.Serializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import at.ngmpps.fjsstt.model.FJSSTTproblem.Objective;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem.Objective;
 
 /**
  * Implements a solution for a one job scheduling problem. Basically it consists
@@ -121,21 +121,9 @@ public class SubproblemSolution implements Serializable {
 	 */
 	public Bid convertToBid() {
 
-		final Bid bid = new Bid(subproblem.getJobID(), this.calcCost(subproblem.getObjective()), machineAssignments, beginningTimesOffsets);
+		final Bid bid = new Bid(subproblem.getJobID(), this.calcCost(subproblem.getObjective()), getMachineAssignments(), 
+				getBeginningTimesOffsets(), subproblem.getProcessTimes(),subproblem.getOperations());
 
-		// loop over operations
-		for (int j = 0; j < subproblem.getOperations(); j++) {
-
-			// the optimal machine for operation j
-			final int optMachine = this.getMachineAssignments()[j];
-
-			// loop over occupied time slots
-			for (int t = beginningTimesOffsets[j]; t <= this.beginningTimesOffsets[j] + subproblem.getProcessTimes()[j][optMachine]
-					- 1; t++) {
-				final int[] tuple = { optMachine, t };
-				bid.getOccupiedTimeSlots().add(tuple);
-			}
-		}
 		return bid;
 	}
 

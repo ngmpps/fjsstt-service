@@ -1,8 +1,10 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
+
+import at.ngmpps.fjsstt.model.problem.subproblem.Bid;
 
 /**
  * Datastructure representing a solution for a FJSSTT problem.

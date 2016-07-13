@@ -1,4 +1,4 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem.subproblem;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import at.ngmpps.fjsstt.model.FJSSTTproblem.Objective;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem.Objective;
 
 /**
  * Specifies a subproblem instance of the one job scheduling problem with

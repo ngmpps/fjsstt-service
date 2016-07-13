@@ -1,4 +1,4 @@
-package at.ngmpps.fjsstt.model;
+package at.ngmpps.fjsstt.model.problem.subproblem;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,6 +61,24 @@ public class Bid implements Serializable {
 		this.occupiedTimeSlots = new ArrayList<int[]>();
 		this.optimumBeginTimes = optimumBeginTimes;
 		this.optimumMachines = optimumMachines;
+	}
+	
+	public Bid(final int id, final double price, final int[] optimumMachines, final int[] optimumBeginTimes, final int[][] processTimes, final int operations) {
+		this(id,price,optimumMachines,optimumBeginTimes);
+		// loop over operations
+		for (int j = 0; j < operations; j++) {
+
+			// the optimal machine for operation j
+			final int optMachine = optimumMachines[j];
+
+			// loop over occupied time slots
+			for (int t = optimumBeginTimes[j]; t <= optimumBeginTimes[j] + processTimes[j][optMachine]
+					- 1; t++) {
+				final int[] tuple = { optMachine, t };
+				getOccupiedTimeSlots().add(tuple);
+			}
+		}
+
 	}
 
 	public int getJobID() {

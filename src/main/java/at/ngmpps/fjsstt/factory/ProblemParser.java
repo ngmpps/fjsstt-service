@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import at.ngmpps.fjsstt.model.FJSSTTproblem;
-import at.ngmpps.fjsstt.model.FJSSTTproblem.Objective;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem.Objective;
 
 public class ProblemParser {
 	static final Logger logger = LoggerFactory.getLogger(ProblemParser.class);
