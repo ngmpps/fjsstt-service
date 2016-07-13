@@ -29,6 +29,8 @@ public class SubproblemSolverConfig implements Serializable {
 	 * neighbourhood search.
 	 */
 	private SubproblemSolverType type;
+
+	String confString;
 	/**
 	 * VNS config parameter, see {@link VNS_subproblem#iterations}
 	 */
@@ -100,12 +102,17 @@ public class SubproblemSolverConfig implements Serializable {
 			this.maxShiftDistances[i] = 10;
 		}
 		this.ls_altMachine_tries = 1;
+		
+		confString = "" + iterations + ", " + maxSlacks + ", " + maxShakingDistance + ", " + ls_iterations
+				+ ", " + maxShiftDistances + ", " + ls_altMachine_tries;
 	}
 
 	public SubproblemSolverConfig(SubproblemSolverType type, int VNSiterations, int maxSlack, int mMaxShakingDistance, int mLS_iterations,
 			int maxShiftDistance, int mLS_altMachine_tries) {
 		this(type, VNSiterations, new int[100], mMaxShakingDistance, mLS_iterations, new int[100], mLS_altMachine_tries, maxSlack,
 				maxShiftDistance);
+		confString = "" + VNSiterations + ", " + maxSlack + ", " + mMaxShakingDistance + ", " + mLS_iterations
+				+ ", " + maxShiftDistance + ", " + mLS_altMachine_tries;
 	}
 
 	/**
@@ -173,6 +180,10 @@ public class SubproblemSolverConfig implements Serializable {
 
 	public SubproblemSolverType getType() {
 		return type;
+	}
+	
+	public String getConfigString(){
+		return confString;
 	}
 
 }
