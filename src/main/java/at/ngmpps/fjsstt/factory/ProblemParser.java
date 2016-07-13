@@ -35,6 +35,62 @@ public class ProblemParser {
 	public static final String SEARCH_NR_TIME_SLOTS_KEY = "SubgradientSearch.NrTimeSlots";
 	public static final String TRANSPORT_FILE_KEY = "SubgradientSearch.TransportFile";
 
+	// file to pares
+	File problemFile;
+
+	Properties configuration = new Properties();
+	// File file;
+
+	// Objective is to fill to be able to create a FJSSTT_problem
+	int jobs;
+
+	int machines;
+
+	// perJob
+	int[] operations;
+
+	int maxOperations;
+
+	// make timeslots in the problem the maxDueDate found in the files
+	int timeslotsMaxDueDate;
+
+	// The sets of alternative machines per operation. A key is an
+	// integer tuple (job,operation), the corresponding value is the set
+	// of alternative machines.
+	HashMap<String, List<Integer>> altMachines;
+
+	// The first index is the job, the second index is the operation,
+	// and the third index is the machine.
+	int[][][] processTimes;
+
+	int[][] travelTimes;
+
+	// per job
+	int[] dueDates;
+
+	// job priorities
+	int[] jobWeights;
+
+	// default objective function for parsed files
+	Objective objective = Objective.TARDINESS;
+
+	public ProblemParser(final File file) {
+		this.problemFile = file;
+	}
+
+	public ProblemParser(final String filename) {
+		this(new File(filename));
+	}
+
+	public static FJSSTTproblem parseFile(final File file) throws URISyntaxException, IOException {
+		final ProblemParser parse = new ProblemParser(file);
+		return parse.parse();
+	}
+
+	public static FJSSTTproblem parseFile(final String filename) throws URISyntaxException, IOException {
+		return parseFile(new File(filename));
+	}
+
 	/**
 	 * Checks if the Given File is OK or if not searches for that file
 	 * 
@@ -84,6 +140,7 @@ public class ProblemParser {
 		}
 		return files;
 	}
+
 	public static List<File> findConfigurationFiles(File problemFilePath) throws IOException {
 		return findFiles(problemFilePath, CONFIG_FILE_EXTENSION);
 	}
@@ -149,6 +206,7 @@ public class ProblemParser {
 
 		return resultFiles;
 	}
+
 	public static List<File> findProblemFiles(File problemFilePath) throws IOException {
 		return findFiles(problemFilePath, ProblemParser.PROBLEM_FILE_EXTENSION);
 	}
@@ -156,6 +214,7 @@ public class ProblemParser {
 	public static List<File> findTransportFiles(File problemFilePath) throws IOException {
 		return findFiles(problemFilePath, TRANSPORT_FILE_EXTENSION);
 	}
+
 	public static boolean getPropertyBool(Properties config, String key) {
 		if (config.containsKey(key)) {
 			String prop = config.getProperty(key);
@@ -209,13 +268,6 @@ public class ProblemParser {
 		return "";
 	}
 
-	public static FJSSTTproblem parseFile(final File file) throws URISyntaxException, IOException {
-		final ProblemParser parse = new ProblemParser(file);
-		return parse.parse();
-	}
-	public static FJSSTTproblem parseFile(final String filename) throws URISyntaxException, IOException {
-		return parseFile(new File(filename));
-	}
 	public static String trimm(String string) {
 		// break at first non space char
 		int i, ii;
@@ -226,53 +278,6 @@ public class ProblemParser {
 			if (string.charAt(ii) != ' ')
 				break;
 		return string.substring(ii, i + 1);
-	}
-
-	// file to pares
-	File problemFile;
-
-	Properties configuration = new Properties();
-	// File file;
-
-	// Objective is to fill to be able to create a FJSSTT_problem
-	int jobs;
-
-	int machines;
-
-	// perJob
-	int[] operations;
-
-	int maxOperations;
-
-	// make timeslots in the problem the maxDueDate found in the files
-	int timeslotsMaxDueDate;
-
-	// The sets of alternative machines per operation. A key is an
-	// integer tuple (job,operation), the corresponding value is the set
-	// of alternative machines.
-	HashMap<String, List<Integer>> altMachines;
-
-	// The first index is the job, the second index is the operation,
-	// and the third index is the machine.
-	int[][][] processTimes;
-
-	int[][] travelTimes;
-
-	// per job
-	int[] dueDates;
-
-	// job priorities
-	int[] jobWeights;
-
-	// default objective function for parsed files
-	Objective objective = Objective.TARDINESS;
-
-	public ProblemParser(final File file) {
-		this.problemFile = file;
-	}
-
-	public ProblemParser(final String filename) {
-		this(new File(filename));
 	}
 
 	public FJSSTTproblem getProblem() {
@@ -369,7 +374,7 @@ public class ProblemParser {
 				// !!! need to adjust machineID: id=1 here its 0
 				final String operationsForJob = operationsLine.group(2);
 
-				// TODO releaseTime is not used
+				// TODO releaseTime is not used; keep this line to keep the semantics of this value 
 				final int releaseTime = new Integer(operationsLine.group(3));
 
 				// there is a semantic difference between L. Mönch's DueDate
