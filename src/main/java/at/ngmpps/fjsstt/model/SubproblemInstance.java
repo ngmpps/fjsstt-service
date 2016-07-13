@@ -1,5 +1,6 @@
 package at.ngmpps.fjsstt.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -17,7 +18,10 @@ import at.ngmpps.fjsstt.model.FJSSTTproblem.Objective;
  * 
  */
 
-public class SubproblemInstance {
+public class SubproblemInstance implements Serializable {
+
+	private static final long serialVersionUID = -1870103761541777620L;
+
 	static final Logger logger = LoggerFactory.getLogger(SubproblemInstance.class);
 
 	/**
@@ -226,7 +230,7 @@ public class SubproblemInstance {
 		case TARDINESS:
 
 			if (dueDate <= 0) {
-				System.err.println("WARNING: job due date not set, but objective is tardiness. Returning job completion time.");
+				logger.warn("WARNING: job due date not set, but objective is tardiness. Returning job completion time.");
 				return compTime;
 			}
 

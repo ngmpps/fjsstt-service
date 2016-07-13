@@ -1,5 +1,6 @@
 package at.ngmpps.fjsstt.model;
 
+import java.io.Serializable;
 import java.util.Properties;
 
 import at.ngmpps.fjsstt.factory.ProblemParser;
@@ -11,7 +12,9 @@ import at.ngmpps.fjsstt.factory.ProblemParser;
  * @author ahaemm
  * 
  */
-public class SubproblemSolverConfig {
+public class SubproblemSolverConfig implements Serializable {
+
+	private static final long serialVersionUID = 3512198032457722173L;
 
 	public static final String TYPE_KEY = "SubproblemSolver.type";
 	public static final String VNS_ITERATIONS_KEY = "SubproblemSolver.VNSiterations";

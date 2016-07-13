@@ -1,5 +1,6 @@
 package at.ngmpps.fjsstt.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
  * 
  */
 
-public class Bid {
+public class Bid implements Serializable {
+
+	private static final long serialVersionUID = 8193409735520951959L;
 
 	/**
 	 * Logger configuration in NgMPPS/src/logback.xml, e.g. to switch between

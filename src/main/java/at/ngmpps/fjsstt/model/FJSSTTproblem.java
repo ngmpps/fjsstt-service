@@ -1,11 +1,15 @@
 package at.ngmpps.fjsstt.model;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements an instance of the flexible job shop scheduling problem with
@@ -16,7 +20,11 @@ import java.util.Random;
  * @author ahaemm
  * 
  */
-public class FJSSTTproblem {
+public class FJSSTTproblem implements Serializable {
+
+	private static final long serialVersionUID = 5108834322696705163L;
+
+	final static Logger logger = LoggerFactory.getLogger(FJSSTTproblem.class);
 
 	/**
 	 * The available objective functions for a single job.
@@ -374,15 +382,15 @@ public class FJSSTTproblem {
 				}
 			}
 		}
-
-		System.out.println();
+		logger.debug("");
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < machines; i++) {
-			System.out.print(shopAssignments[i]);
-			System.out.print(',');
+			sb.append("" + shopAssignments[i]);
+			sb.append(",");
 		}
-		System.out.println();
-		this.printMatrix(travelTimesShops);
-		this.printMatrix(travelTimes, pw);
+		logger.debug(sb.toString());
+		printMatrix(travelTimesShops);
+		printMatrix(travelTimes, pw);
 	}
 
 	public List<Integer> getAltMachines(int job, int op) {
@@ -444,25 +452,28 @@ public class FJSSTTproblem {
 
 	public void printMatrix(int[][] matrix) {
 		for (int i = 0; i < matrix.length; i++) {
-			System.out.println();
+			logger.debug("");
+			StringBuilder sb = new StringBuilder();
 			for (int j = 0; j < matrix[i].length; j++) {
-				System.out.print(matrix[i][j]);
-				System.out.print(" ");
+				sb.append("" + matrix[i][j]);
+				sb.append(" ");
 			}
+			logger.debug(sb.toString());
 		}
-		System.out.println();
 	}
 
 	public void printMatrix(int[][] matrix, PrintWriter pw) {
 		for (int i = 0; i < matrix.length; i++) {
-			System.out.println();
+			logger.debug("");
+			StringBuilder sb = new StringBuilder();
 			for (int j = 0; j < matrix[i].length; j++) {
-				System.out.print(matrix[i][j]);
+				sb.append(matrix[i][j]);
 				pw.print(matrix[i][j]);
-				System.out.print(" ");
+				sb.append(" ");
 				pw.print(" ");
 			}
 			pw.println();
+			logger.debug(sb.toString());
 		}
 		System.out.println();
 	}

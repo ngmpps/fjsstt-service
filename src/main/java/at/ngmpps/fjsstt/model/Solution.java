@@ -1,5 +1,6 @@
 package at.ngmpps.fjsstt.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
 
@@ -9,7 +10,9 @@ import java.util.Random;
  * @author ahaemm
  * 
  */
-public class Solution {
+public class Solution implements Serializable {
+
+	private static final long serialVersionUID = -409137575428427517L;
 
 	/**
 	 * The problem to be solved.

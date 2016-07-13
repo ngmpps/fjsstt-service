@@ -1,5 +1,7 @@
 package at.ngmpps.fjsstt.model;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,15 +17,17 @@ import at.ngmpps.fjsstt.model.FJSSTTproblem.Objective;
  * @author ahaemm
  * 
  */
-public class SubproblemSolution {
+public class SubproblemSolution implements Serializable {
+
+	private static final long serialVersionUID = -4040402586715923437L;
 
 	/**
 	 * Logger configuration in NgMPPS/src/logback.xml, e.g. to switch between
 	 * info / debug level.
 	 */
-	final static Logger mLogger = LoggerFactory.getLogger(SubproblemSolution.class);
+	final static Logger logger = LoggerFactory.getLogger(SubproblemSolution.class);
 
-	SubproblemInstance mSubproblem;
+	SubproblemInstance subproblem;
 
 	/**
 	 * Integer array storing the assignment of machines to operations. Array
@@ -50,7 +54,7 @@ public class SubproblemSolution {
 	 * @param subproblem
 	 */
 	public SubproblemSolution(final SubproblemInstance subproblem) {
-		mSubproblem = subproblem;
+		this.subproblem = subproblem;
 		machineAssignments = new int[subproblem.getOperations()];
 		beginningTimesOffsets = new int[subproblem.getOperations()];
 		errorCode = 0;
@@ -64,12 +68,9 @@ public class SubproblemSolution {
 	 * @param times
 	 */
 	public SubproblemSolution(final SubproblemInstance problem, final int[] assignments, final int[] times) {
-		mSubproblem = problem;
-		machineAssignments = new int[assignments.length];
-		beginningTimesOffsets = new int[times.length];
+		this(problem);
 		System.arraycopy(assignments, 0, machineAssignments, 0, assignments.length);
 		System.arraycopy(times, 0, beginningTimesOffsets, 0, times.length);
-		errorCode = 0;
 	}
 
 	/**
@@ -80,11 +81,7 @@ public class SubproblemSolution {
 	 * @param errorCode
 	 */
 	public SubproblemSolution(final SubproblemInstance problem, final int[] assignments, final int[] times, final int errorCode) {
-		mSubproblem = problem;
-		machineAssignments = new int[assignments.length];
-		beginningTimesOffsets = new int[times.length];
-		System.arraycopy(assignments, 0, machineAssignments, 0, assignments.length);
-		System.arraycopy(times, 0, beginningTimesOffsets, 0, times.length);
+		this(problem,assignments,times);
 		this.errorCode = errorCode;
 	}
 
@@ -103,15 +100,15 @@ public class SubproblemSolution {
 
 		// calculate the cost related to the objective function, assuming an
 		// offset 0 for the beginning times
-		cost += mSubproblem.calcObjectiveValue(objective, beginningTimesOffsets[mSubproblem.getOperations() - 1],
-				machineAssignments[mSubproblem.getOperations() - 1]);
+		cost += subproblem.calcObjectiveValue(objective, beginningTimesOffsets[subproblem.getOperations() - 1],
+				machineAssignments[subproblem.getOperations() - 1]);
 
 		// calculate the cost related to machine usage
-		for (int op = 0; op < mSubproblem.getOperations(); op++) {
+		for (int op = 0; op < subproblem.getOperations(); op++) {
 			final int opMachine = this.getMachineAssignments()[op];
-			final int opCompletionTime = beginningTimesOffsets[op] + mSubproblem.getProcessTimes()[op][opMachine] - 1;
+			final int opCompletionTime = beginningTimesOffsets[op] + subproblem.getProcessTimes()[op][opMachine] - 1;
 			for (int t = beginningTimesOffsets[op]; t <= opCompletionTime; t++) {
-				cost += mSubproblem.getMultipliers()[opMachine][t];
+				cost += subproblem.getMultipliers()[opMachine][t];
 			}
 		}
 		return cost;
@@ -124,16 +121,16 @@ public class SubproblemSolution {
 	 */
 	public Bid convertToBid() {
 
-		final Bid bid = new Bid(mSubproblem.getJobID(), this.calcCost(mSubproblem.getObjective()), machineAssignments, beginningTimesOffsets);
+		final Bid bid = new Bid(subproblem.getJobID(), this.calcCost(subproblem.getObjective()), machineAssignments, beginningTimesOffsets);
 
 		// loop over operations
-		for (int j = 0; j < mSubproblem.getOperations(); j++) {
+		for (int j = 0; j < subproblem.getOperations(); j++) {
 
 			// the optimal machine for operation j
 			final int optMachine = this.getMachineAssignments()[j];
 
 			// loop over occupied time slots
-			for (int t = beginningTimesOffsets[j]; t <= this.beginningTimesOffsets[j] + mSubproblem.getProcessTimes()[j][optMachine]
+			for (int t = beginningTimesOffsets[j]; t <= this.beginningTimesOffsets[j] + subproblem.getProcessTimes()[j][optMachine]
 					- 1; t++) {
 				final int[] tuple = { optMachine, t };
 				bid.getOccupiedTimeSlots().add(tuple);
@@ -161,15 +158,15 @@ public class SubproblemSolution {
 	 *           An optional name of the solution (e.g. "initial", "random").
 	 */
 	public void print(String name) {
-		mLogger.debug("Printing the solution \"" + name + "\" for subproblem / job with index " + mSubproblem.getJobID());
-		mLogger.debug("operation, machine");
-		for (int i = 0; i < mSubproblem.operations; i++) {
-			mLogger.debug(i + ", " + machineAssignments[i]);
+		logger.debug("Printing the solution \"" + name + "\" for subproblem / job with index " + subproblem.getJobID());
+		logger.debug("operation, machine");
+		for (int i = 0; i < subproblem.operations; i++) {
+			logger.debug(i + ", " + machineAssignments[i]);
 		}
-		mLogger.debug("operation, beginning time, completion time");
-		for (int i = 0; i < mSubproblem.getOperations(); i++) {
-			final int completionTime = beginningTimesOffsets[i] + mSubproblem.getProcessTimes()[i][machineAssignments[i]] - 1;
-			mLogger.debug(i + ", " + beginningTimesOffsets[i] + ", " + completionTime);
+		logger.debug("operation, beginning time, completion time");
+		for (int i = 0; i < subproblem.getOperations(); i++) {
+			final int completionTime = beginningTimesOffsets[i] + subproblem.getProcessTimes()[i][machineAssignments[i]] - 1;
+			logger.debug(i + ", " + beginningTimesOffsets[i] + ", " + completionTime);
 		}
 
 	}
