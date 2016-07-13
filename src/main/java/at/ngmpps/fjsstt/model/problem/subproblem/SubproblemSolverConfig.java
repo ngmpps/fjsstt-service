@@ -171,7 +171,7 @@ public class SubproblemSolverConfig implements Serializable {
 		return maxSlacks;
 	}
 
-	public SubproblemSolverType getmType() {
+	public SubproblemSolverType getType() {
 		return type;
 	}
 
