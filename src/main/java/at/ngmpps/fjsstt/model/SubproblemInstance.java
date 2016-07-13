@@ -132,8 +132,8 @@ public class SubproblemInstance {
 		// calculate machine utilisation costs, sum over all operations
 		for (int op = 0; op < operations; op++) {
 			// operation begin time
-			final int op_beginTime = bid.getmOptimumBeginTimes()[op];
-			final int op_machine = bid.getmOptimumMachines()[op];
+			final int op_beginTime = bid.getOptimumBeginTimes()[op];
+			final int op_machine = bid.getOptimumMachines()[op];
 			final int op_completionTime = op_beginTime + processTimes[op][op_machine] - 1;
 
 			for (int k = op_beginTime; k <= op_completionTime; k++) {
@@ -153,8 +153,8 @@ public class SubproblemInstance {
 		}
 
 		// add job objective value
-		final int lastOp_beginTime = bid.getmOptimumBeginTimes()[operations - 1];
-		final int lastOp_machine = bid.getmOptimumMachines()[operations - 1];
+		final int lastOp_beginTime = bid.getOptimumBeginTimes()[operations - 1];
+		final int lastOp_machine = bid.getOptimumMachines()[operations - 1];
 
 		cost += this.calcObjectiveValue(objective, lastOp_beginTime, lastOp_machine);
 
@@ -178,8 +178,8 @@ public class SubproblemInstance {
 		// calculate machine utilisation costs, sum over all operations
 		for (int op = 0; op < operations; op++) {
 			// operation begin time
-			final int op_beginTime = bid.getmOptimumBeginTimes()[op];
-			final int op_machine = bid.getmOptimumMachines()[op];
+			final int op_beginTime = bid.getOptimumBeginTimes()[op];
+			final int op_machine = bid.getOptimumMachines()[op];
 			final int op_completionTime = op_beginTime + processTimes[op][op_machine] - 1;
 
 			for (int k = op_beginTime; k <= op_completionTime; k++) {
@@ -188,8 +188,8 @@ public class SubproblemInstance {
 		}
 
 		// add job objective value
-		final int lastOp_beginTime = bid.getmOptimumBeginTimes()[operations - 1];
-		final int lastOp_machine = bid.getmOptimumMachines()[operations - 1];
+		final int lastOp_beginTime = bid.getOptimumBeginTimes()[operations - 1];
+		final int lastOp_machine = bid.getOptimumMachines()[operations - 1];
 
 		cost += this.calcObjectiveValue(objective, lastOp_beginTime, lastOp_machine);
 

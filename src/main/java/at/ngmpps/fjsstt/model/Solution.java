@@ -81,8 +81,8 @@ public class Solution {
 		if (this.bids != null) {
 			for (final Bid bid : this.bids) {
 				final int job = bid.getJobID();
-				final int[] machineAssignments = bid.getmOptimumMachines();
-				final int[] beginTimes = bid.getmOptimumBeginTimes();
+				final int[] machineAssignments = bid.getOptimumMachines();
+				final int[] beginTimes = bid.getOptimumBeginTimes();
 
 				System.arraycopy(machineAssignments, 0, this.operationsMachineAssignments[job], 0, machineAssignments.length);
 				System.arraycopy(beginTimes, 0, this.operationsBeginTimes[job], 0, beginTimes.length);
