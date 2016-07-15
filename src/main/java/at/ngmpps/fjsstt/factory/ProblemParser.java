@@ -365,6 +365,7 @@ public class ProblemParser {
 			List<File> problemFiles = findProblemFiles(configFile);
 			if (problemFiles != null && problemFiles.size() > 0) {
 				problemFile = problemFiles.get(0);
+				parseProblemFile();
 			}
 			if (configuration != null) {
 				parseTransportTimes();
