@@ -327,8 +327,11 @@ public class ProblemParser {
 	}
 
 	public FJSSTTproblem getProblem() {
-		return new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines, processTimes, travelTimes,
+		FJSSTTproblem problem = new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines, processTimes, travelTimes,
 				dueDates, objective, jobWeights, configuration);
+		if(configuration!=null && configuration.containsKey(ProblemParser.SEARCH_NR_TIME_SLOTS_KEY))
+			problem.setTimeSlots(Integer.parseInt(configuration.getProperty(ProblemParser.SEARCH_NR_TIME_SLOTS_KEY)));
+		return problem;
 	}
 
 	public boolean getPropertyBool(String key) {
@@ -371,7 +374,7 @@ public class ProblemParser {
 					parseTransportTimes(transportFiles.get(0));
 				}
 			}
-			return getProblem();
+			return getProblem(); 
 		} catch (Exception io) {
 			// its ok if something happens here. we still have the problem
 			io.printStackTrace();
