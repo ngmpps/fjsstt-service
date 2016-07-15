@@ -101,11 +101,10 @@ public class ProblemParser {
 	 * @throws IOException
 	 */
 	public void parseProblemFileOnly(final File file) throws URISyntaxException, IOException {
-		final ProblemParser parse = new ProblemParser();
 		List<File> files = checkOrFindFile(file, PROBLEM_FILE_EXTENSION);
 		if (files.size() > 0) {
-			parse.problemFile = files.get(0);
-			parse.parseProblemFile();
+			problemFile = files.get(0);
+			parseProblemFile();
 		}
 	}
 
