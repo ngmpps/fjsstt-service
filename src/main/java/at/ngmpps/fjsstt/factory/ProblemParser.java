@@ -95,6 +95,27 @@ public class ProblemParser {
 	 * Based on the fjs File find also a .properties file with the same name and
 	 * the transport file configured there.
 	 * 
+	 * @param file
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	public static FJSSTTproblem parseProblemFileOnly(final File file) throws URISyntaxException, IOException {
+		final ProblemParser parse = new ProblemParser();
+		List<File> files = checkOrFindFile(file, PROBLEM_FILE_EXTENSION);
+		if (files.size() > 0) {
+			parse.problemFile = files.get(0);
+			parse.parseProblemFile();
+			return parse.getProblem();
+		}
+		return null;
+	}
+
+	
+	/**
+	 * Based on the fjs File find also a .properties file with the same name and
+	 * the transport file configured there.
+	 * 
 	 * @param filename
 	 * @return
 	 * @throws URISyntaxException
