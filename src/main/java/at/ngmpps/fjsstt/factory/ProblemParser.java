@@ -100,12 +100,13 @@ public class ProblemParser {
 	 * @throws URISyntaxException
 	 * @throws IOException
 	 */
-	public void parseProblemFileOnly(final File file) throws URISyntaxException, IOException {
+	public ProblemParser parseProblemFileOnly(final File file) throws URISyntaxException, IOException {
 		List<File> files = checkOrFindFile(file, PROBLEM_FILE_EXTENSION);
 		if (files.size() > 0) {
 			problemFile = files.get(0);
 			parseProblemFile();
 		}
+		return this;
 	}
 
 	
