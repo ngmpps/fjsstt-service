@@ -123,4 +123,12 @@ public class ModelFactory {
     public static SolutionSet noSolutionSet() {
         return null;
     }
+    public static SolutionSet emptySolutionSet() {
+        final SolutionSet ss = new SolutionSet("noname",
+                "no problem",
+                "no subproblems",
+                "no feasibilityRepair",
+                null, 0.0, 1.0);
+        return ss;
+    }
 }
