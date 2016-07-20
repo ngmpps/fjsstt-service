@@ -35,7 +35,7 @@ public class ProblemParser {
 	public static final String SEARCH_NR_TIME_SLOTS_KEY = "SubgradientSearch.NrTimeSlots";
 	public static final String TRANSPORT_FILE_KEY = "SubgradientSearch.TransportFile";
 
-	// file to pares
+	// fjs file to pares
 	File problemFile;
 
 	Properties configuration = new Properties();
@@ -74,21 +74,67 @@ public class ProblemParser {
 	// default objective function for parsed files
 	Objective objective = Objective.TARDINESS;
 
-	public ProblemParser(final File file) {
-		this.problemFile = file;
+	public ProblemParser() {
 	}
 
-	public ProblemParser(final String filename) {
-		this(new File(filename));
+	/**
+	 * Based on the fjs File find also a .properties file with the same name and
+	 * the transport file configured there.
+	 * 
+	 * @param file
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	public static FJSSTTproblem parseProblemWithProblemFile(final File file) throws URISyntaxException, IOException {
+		final ProblemParser parse = new ProblemParser();
+		return parse.parseProblemConfig(file);
 	}
 
-	public static FJSSTTproblem parseFile(final File file) throws URISyntaxException, IOException {
-		final ProblemParser parse = new ProblemParser(file);
-		return parse.parse();
+	/**
+	 * Based on the fjs File find also a .properties file with the same name and
+	 * the transport file configured there.
+	 * 
+	 * @param file
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	public ProblemParser parseProblemFileOnly(final File file) throws URISyntaxException, IOException {
+		List<File> files = checkOrFindFile(file, PROBLEM_FILE_EXTENSION);
+		if (files.size() > 0) {
+			problemFile = files.get(0);
+			parseProblemFile();
+		}
+		return this;
 	}
 
-	public static FJSSTTproblem parseFile(final String filename) throws URISyntaxException, IOException {
-		return parseFile(new File(filename));
+	
+	/**
+	 * Based on the fjs File find also a .properties file with the same name and
+	 * the transport file configured there.
+	 * 
+	 * @param filename
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	public static FJSSTTproblem parseProblemWithProblemFile(final String filename) throws URISyntaxException, IOException {
+		return parseProblemWithProblemFile(new File(filename));
+	}
+
+	/**
+	 * Based on the properties File (=configuration) find also a problem file
+	 * (.fjs) with the same name and the transport file configured.
+	 * 
+	 * @param filename
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	public static FJSSTTproblem parseProblemWithConfigFile(final String filename) throws URISyntaxException, IOException {
+		final ProblemParser parse = new ProblemParser();
+		return parse.parseConfigProblem(new File(filename));
 	}
 
 	/**
@@ -281,8 +327,11 @@ public class ProblemParser {
 	}
 
 	public FJSSTTproblem getProblem() {
-		return new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines, processTimes, travelTimes,
+		FJSSTTproblem problem = new FJSSTTproblem(jobs, operations, maxOperations, machines, timeslotsMaxDueDate, altMachines, processTimes, travelTimes,
 				dueDates, objective, jobWeights, configuration);
+		if(configuration!=null && configuration.containsKey(ProblemParser.SEARCH_NR_TIME_SLOTS_KEY))
+			problem.setTimeSlots(Integer.parseInt(configuration.getProperty(ProblemParser.SEARCH_NR_TIME_SLOTS_KEY)));
+		return problem;
 	}
 
 	public boolean getPropertyBool(String key) {
@@ -302,6 +351,39 @@ public class ProblemParser {
 	}
 
 	/**
+	 * Checks if the configuration File (.properties) is readable and parses it;
+	 * additionally it searches for fjs problems files and takes one of the found
+	 * files with a similar name. The config file is used to check if it contains
+	 * the link to the transport file (SubgradientSearch.TRANSPORT_FILE_KEY); if
+	 * so its parsed
+	 * 
+	 * @return
+	 */
+	public FJSSTTproblem parseConfigProblem(File configFile) {
+		try {
+			parseConfigurationFile(configFile);
+			List<File> problemFiles = findProblemFiles(configFile);
+			if (problemFiles != null && problemFiles.size() > 0) {
+				problemFile = problemFiles.get(0);
+				parseProblemFile();
+			}
+			if (configuration != null) {
+				parseTransportTimes();
+			} else {
+				List<File> transportFiles = findTransportFiles(configFile);
+				if (transportFiles != null && transportFiles.size() > 0) {
+					parseTransportTimes(transportFiles.get(0));
+				}
+			}
+			return getProblem(); 
+		} catch (Exception io) {
+			// its ok if something happens here. we still have the problem
+			io.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
 	 * Checks if the problemFile is readable and parses it; additionally it
 	 * searches for properties files (the config) and takes one of the found
 	 * files. That file is used to check if it contains the link to the transport
@@ -309,31 +391,31 @@ public class ProblemParser {
 	 * 
 	 * @return
 	 */
-
-	public FJSSTTproblem parse() {
+	public FJSSTTproblem parseProblemConfig(File problemFjsFile) {
 		List<File> files = checkOrFindFile(problemFile, PROBLEM_FILE_EXTENSION);
-		if (files.size() > 0)
+		if (files.size() > 0) {
 			problemFile = files.get(0);
-		try {
-			parseProblemFile();
 			try {
-				List<File> multiplePropertiesFiles = findConfigurationFiles(problemFile);
-				if (multiplePropertiesFiles != null && multiplePropertiesFiles.size() > 0) {
-					parsePropertiesFile(multiplePropertiesFiles.get(0));
-					parseTransportTimes();
+				parseProblemFile();
+				try {
+					List<File> multiplePropertiesFiles = findConfigurationFiles(problemFile);
+					if (multiplePropertiesFiles != null && multiplePropertiesFiles.size() > 0) {
+						parseConfigurationFile(multiplePropertiesFiles.get(0));
+						parseTransportTimes();
+					}
+				} catch (Exception io) {
+					// its ok if something happens here. we still have the problem
+					io.printStackTrace();
 				}
-			} catch (Exception io) {
-				// its ok if something happens here. we still have the problem
-				io.printStackTrace();
+				return getProblem();
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
 			}
-			return getProblem();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
 		}
 		return null;
 	}
 
-	public File parseProblemFile() throws IOException {
+	protected File parseProblemFile() throws IOException {
 		if (problemFile != null && problemFile.canRead()) {
 			// key == int[](job,operation)
 			altMachines = new HashMap<String, List<Integer>>();
@@ -374,7 +456,8 @@ public class ProblemParser {
 				// !!! need to adjust machineID: id=1 here its 0
 				final String operationsForJob = operationsLine.group(2);
 
-				// TODO releaseTime is not used; keep this line to keep the semantics of this value 
+				// TODO releaseTime is not used; keep this line to keep the
+				// semantics of this value
 				final int releaseTime = new Integer(operationsLine.group(3));
 
 				// there is a semantic difference between L. Mönch's DueDate
@@ -423,7 +506,15 @@ public class ProblemParser {
 		return problemFile;
 	}
 
-	public Properties parsePropertiesFile(File properties) throws IOException {
+	/**
+	 * parse the .properties file with the configuration (search for it, if not
+	 * there)
+	 * 
+	 * @param properties
+	 * @return
+	 * @throws IOException
+	 */
+	public Properties parseConfigurationFile(File properties) throws IOException {
 		// parse propertiesfile ([problem].conf) and add to problem
 		List<File> found = checkOrFindFile(properties, CONFIG_FILE_EXTENSION);
 		if (found.size() > 0)
@@ -438,6 +529,13 @@ public class ProblemParser {
 		return null;
 	}
 
+	/**
+	 * If a configuration is given, use the transport file there; else search for
+	 * a transport file with a similar name as the problem file
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	public File parseTransportTimes() throws IOException {
 		File file = null;
 		if (configuration != null && configuration.containsKey(TRANSPORT_FILE_KEY)) {
@@ -449,6 +547,10 @@ public class ProblemParser {
 					parseTransportTimes(file);
 				}
 			}
+		} else if (configuration == null) {
+			List<File> transports = findTransportFiles(problemFile);
+			if (transports != null && !transports.isEmpty())
+				parseTransportTimes(transports.get(0));
 		}
 		return file;
 	}
@@ -477,7 +579,7 @@ public class ProblemParser {
 		}
 
 		if (!initTravelTimes) {
-			// we don't have this init w/ 0
+			// we don't have times: init w/ 0
 			travelTimes = new int[machines][];
 			for (int i = 0; i < travelTimes.length; ++i) {
 				travelTimes[i] = new int[machines];
