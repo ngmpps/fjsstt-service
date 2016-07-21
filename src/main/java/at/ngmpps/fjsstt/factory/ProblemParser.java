@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -417,11 +418,26 @@ public class ProblemParser {
 
 	protected File parseProblemFile() throws IOException {
 		if (problemFile != null && problemFile.canRead()) {
+			BufferedReader reader = new BufferedReader(new FileReader(problemFile));
+			parseProblem(reader);
+			reader.close();
+		}
+		return problemFile;
+	}
+	
+	protected String parseProblem(String prob) throws IOException {
+		BufferedReader reader = new BufferedReader(new StringReader(prob));
+		parseProblem(reader);
+		reader.close();
+		return prob;
+	}
+	
+	protected void parseProblem(BufferedReader reader) throws IOException {
 			// key == int[](job,operation)
 			altMachines = new HashMap<String, List<Integer>>();
 
 			// read files line per line
-			BufferedReader reader = new BufferedReader(new FileReader(problemFile));
+			
 
 			String currentLine = reader.readLine();
 
@@ -501,9 +517,7 @@ public class ProblemParser {
 					altMachines.put(key, altMachinesForOp);
 				}
 			}
-			reader.close();
-		}
-		return problemFile;
+			
 	}
 
 	/**
@@ -527,6 +541,12 @@ public class ProblemParser {
 			configuration = null;
 		}
 		return null;
+	}
+	
+	public Properties parseConfiguration(String properties) throws IOException {
+		configuration = new Properties();
+		configuration.load(new StringReader(properties));
+		return configuration;
 	}
 
 	/**
@@ -555,14 +575,35 @@ public class ProblemParser {
 		return file;
 	}
 
+	public void parseTransportTimes(String pathToFile) throws IOException {
+		List<File> transpFile = findFiles(new File(pathToFile), TRANSPORT_FILE_EXTENSION);
+		if (transpFile != null && transpFile.size() > 0) {
+			File file = transpFile.get(0);
+			parseTransportTimes(file);
+		}
+	}
+	
 	public void parseTransportTimes(File transportFile) throws IOException {
 
-		boolean initTravelTimes = false;
 		if (transportFile != null) {
 			// try also travel time
 			BufferedReader reader = new BufferedReader(new FileReader(transportFile));
-			travelTimes = new int[machines][];
-			String currentLine = reader.readLine();
+			parseTransportTimes(reader);
+			reader.close();
+		}
+	}
+	public void parseTransportTimesString(String transportString) throws IOException {
+		BufferedReader reader = new BufferedReader(new StringReader(transportString));
+		parseTransportTimes(reader);
+		reader.close();
+	}
+
+	public void parseTransportTimes(BufferedReader reader) throws IOException {
+		boolean initTravelTimes = false;
+		// try also travel time
+		travelTimes = new int[machines][];
+		String currentLine = reader.readLine();
+		if(currentLine!=null) {
 			for (int machine = 0; currentLine != null && machine < machines; machine++) {
 				initTravelTimes = true;
 				// one line per machine
@@ -575,9 +616,8 @@ public class ProblemParser {
 				}
 				currentLine = reader.readLine();
 			}
-			reader.close();
 		}
-
+		
 		if (!initTravelTimes) {
 			// we don't have times: init w/ 0
 			travelTimes = new int[machines][];
@@ -589,12 +629,6 @@ public class ProblemParser {
 			}
 		}
 	}
-
-	public void parseTransportTimes(String pathToFile) throws IOException {
-		List<File> transpFile = findFiles(new File(pathToFile), TRANSPORT_FILE_EXTENSION);
-		if (transpFile != null && transpFile.size() > 0) {
-			File file = transpFile.get(0);
-			parseTransportTimes(file);
-		}
-	}
+	
+	
 }
