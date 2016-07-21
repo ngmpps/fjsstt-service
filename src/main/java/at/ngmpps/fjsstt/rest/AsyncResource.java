@@ -4,6 +4,8 @@ import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.SolutionSet;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
+import at.ngmpps.fjsstt.model.problem.Solution;
 import at.ngmpps.fjsstt.model.problem.subproblem.Bid;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.slf4j.Logger;
@@ -106,25 +108,17 @@ public class AsyncResource {
 
             private SolutionSet veryExpensiveOperation() {
                 try {
-                    // write ProblemSet to local files
-                    List<Path> filenames = writeToFiles(problemSet);
-                    Path fjsFile = filenames.get(0);
-                    log.info("fjsFile available at: {}", fjsFile);
-                    Path transportFile = filenames.get(1);
-                    log.info("transportFile available at: {}", transportFile);
-                    Path propertiesFile = filenames.get(2);
-                    log.info("propertiesFile available at: {}", propertiesFile);
                     // build problem parser
                     ProblemParser parser = new ProblemParser();
-                    // TODO (gw): instrument the parser on the three Filenames in "List<String> filenames"
-
-                    // TODO (gw): Calculate and return problem solution
-
-                    // delete temporary files
-                    for (Path file : filenames) {
-                        Files.deleteIfExists(file);
-                        log.info("file {} deleted.", file);
-                    }
+                    // DONE (gw): instrument the parser on the problemSet 
+                    parser.parseProblem(problemSet.getFjs());
+                    parser.parseTransportTimes(problemSet.getTransport());
+                    parser.parseConfiguration(problemSet.getProperties());
+                    
+                    // DONE (gw): Calculate and return problem solution
+                    FJSSTTproblem problem = parser.getProblem();
+                    // This generates an initial, but infeasible Solution. 
+                    Solution s = new Solution(problem);
 
                     // TODO (fs): Transform Solution to SolutionSet (or directly return Solution, if possible)
 

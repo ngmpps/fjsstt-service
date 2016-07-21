@@ -425,14 +425,14 @@ public class ProblemParser {
 		return problemFile;
 	}
 	
-	protected String parseProblem(String prob) throws IOException {
+	public String parseProblem(String prob) throws IOException {
 		BufferedReader reader = new BufferedReader(new StringReader(prob));
 		parseProblem(reader);
 		reader.close();
 		return prob;
 	}
 	
-	protected void parseProblem(BufferedReader reader) throws IOException {
+	public void parseProblem(BufferedReader reader) throws IOException {
 			// key == int[](job,operation)
 			altMachines = new HashMap<String, List<Integer>>();
 
