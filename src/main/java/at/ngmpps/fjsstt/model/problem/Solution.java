@@ -1,6 +1,7 @@
 package at.ngmpps.fjsstt.model.problem;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -55,6 +56,15 @@ public class Solution implements Serializable {
 	 * solution.
 	 */
 	final double[][] multipliers;
+
+	public Solution() {
+		multipliers = new double[0][];
+		subgradients = new int[0][];
+		operationsMachineAssignments = new int[0][];
+		operationsBeginTimes = new int[0][];
+		bids = new Bid[0];
+		problem = null;
+	}
 
 	public Solution(final FJSSTTproblem problem) {
 		this(problem, Double.NEGATIVE_INFINITY);
@@ -260,5 +270,19 @@ public class Solution implements Serializable {
 
 	public void setOperationsMachineAssignments(final int job, final int op, final int time) {
 		operationsMachineAssignments[job][op] = time;
+	}
+
+	@Override
+	public String toString() {
+		return "Solution{" +
+				"problem=" + problem +
+				", objectiveValue=" + objectiveValue +
+				", bids=" + Arrays.toString(bids) +
+				", operationsBeginTimes=" + Arrays.toString(operationsBeginTimes) +
+				", operationsMachineAssignments=" + Arrays.toString(operationsMachineAssignments) +
+				", iteration=" + iteration +
+				", subgradients=" + Arrays.toString(subgradients) +
+				", multipliers=" + Arrays.toString(multipliers) +
+				'}';
 	}
 }
