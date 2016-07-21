@@ -16,19 +16,9 @@ public class SolutionSet {
     private String name;
 
     /**
-     * The name of the dual problem (e.g. "Surrogate Subgradientenverfahren")
+     * Configuration Information, such as "dual problem", "sub problems" or "feasibility repair"
      */
-    private String dualProblem;
-
-    /**
-     * Name of the sub problems (e.g. "Variable Nachbarschaftssuche", "Dynamische Programmierung")
-     */
-    private String subProblems;
-
-    /**
-     * Feasibility Repair (e.g. "List Scheduling")
-     */
-    private String feasibilityRepair;
+    private String configuration;
 
     /**
      * A Map of Strings representing the solution, one entry per job.
@@ -55,17 +45,13 @@ public class SolutionSet {
     }
 
     public SolutionSet(String name,
-                       String dualProblem,
-                       String subProblems,
-                       String feasibilityRepair,
+                       String configuration,
                        Map<String, String> solution,
                        Double lowerBound,
                        Double upperBound) {
 
         this.name = name;
-        this.dualProblem = dualProblem;
-        this.subProblems = subProblems;
-        this.feasibilityRepair = feasibilityRepair;
+        this.configuration = configuration;
         this.solution = solution;
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
@@ -75,16 +61,8 @@ public class SolutionSet {
         return name;
     }
 
-    public String getDualProblem() {
-        return dualProblem;
-    }
-
-    public String getSubProblems() {
-        return subProblems;
-    }
-
-    public String getFeasibilityRepair() {
-        return feasibilityRepair;
+    public String getConfiguration() {
+        return configuration;
     }
 
     public Map<String, String> getSolution() {
@@ -103,16 +81,8 @@ public class SolutionSet {
         this.name = name;
     }
 
-    public void setDualProblem(String dualProblem) {
-        this.dualProblem = dualProblem;
-    }
-
-    public void setSubProblems(String subProblems) {
-        this.subProblems = subProblems;
-    }
-
-    public void setFeasibilityRepair(String feasibilityRepair) {
-        this.feasibilityRepair = feasibilityRepair;
+    public void setConfiguration(String configuration) {
+        this.configuration = configuration;
     }
 
     public void setSolution(Map<String, String> solution) {
@@ -131,9 +101,7 @@ public class SolutionSet {
     public String toString() {
         return "SolutionSet{" +
                 "name='" + name + '\'' +
-                ", dualProblem='" + dualProblem + '\'' +
-                ", subProblems='" + subProblems + '\'' +
-                ", feasibilityRepair='" + feasibilityRepair + '\'' +
+                ", configuration='" + configuration + '\'' +
                 ", solution=" + solution +
                 ", lowerBound=" + lowerBound +
                 ", upperBound=" + upperBound +
