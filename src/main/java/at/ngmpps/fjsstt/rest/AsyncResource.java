@@ -4,6 +4,10 @@ import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.SolutionSet;
+import at.ngmpps.fjsstt.model.problem.subproblem.Bid;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -25,6 +29,8 @@ public class AsyncResource {
     private static int numberOfSuccessResponses = 0;
     private static int numberOfFailures = 0;
     private static Throwable lastException = null;
+
+    final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
 
     @GET
     public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
@@ -52,7 +58,7 @@ public class AsyncResource {
             private String veryExpensiveOperation() {
                 try {
                     for (int i = 0; i < 10; i++) {
-                        System.out.println("sleeping for another second: " + i);
+                        log.info("sleeping for another second: {}", i);
                         Thread.sleep(1000);
                     }
                     return "Done";
@@ -103,11 +109,11 @@ public class AsyncResource {
                     // write ProblemSet to local files
                     List<Path> filenames = writeToFiles(problemSet);
                     Path fjsFile = filenames.get(0);
-                    System.out.println("fjsFile available at: " + fjsFile);
+                    log.info("fjsFile available at: {}", fjsFile);
                     Path transportFile = filenames.get(1);
-                    System.out.println("transportFile available at: " + transportFile);
+                    log.info("transportFile available at: {}", transportFile);
                     Path propertiesFile = filenames.get(2);
-                    System.out.println("propertiesFile available at: " + propertiesFile);
+                    log.info("propertiesFile available at: {}", propertiesFile);
                     // build problem parser
                     ProblemParser parser = new ProblemParser();
                     // TODO (gw): instrument the parser on the three Filenames in "List<String> filenames"
@@ -117,6 +123,7 @@ public class AsyncResource {
                     // delete temporary files
                     for (Path file : filenames) {
                         Files.deleteIfExists(file);
+                        log.info("file {} deleted.", file);
                     }
 
                     // TODO (fs): Transform Solution to SolutionSet (or directly return Solution, if possible)
