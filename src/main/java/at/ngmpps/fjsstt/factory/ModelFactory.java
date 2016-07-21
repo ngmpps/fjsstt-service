@@ -112,10 +112,8 @@ public class ModelFactory {
     }
 
 	public static SolutionSet createSrfgSolutionSet() {
-		final SolutionSet ss = new SolutionSet("Algorithmus 1",
-                "Surrogate Subgradientenverfahren",
-                "Variable Nachbarschaftssuche",
-                "List Scheduling",
+		// rem values for config make no sense
+		final SolutionSet ss = new SolutionSet("Algorithmus 1", "SubgradientSearch=Surrogate Subgradientenverfahren\n SubgradientSolution=Variable Nachbarschaftssuche\n FeasibilityRepari=List Scheduling\n",
                 mySolution, 537.5, 541.0);
 		return ss;
 	}
@@ -123,11 +121,10 @@ public class ModelFactory {
     public static SolutionSet noSolutionSet() {
         return null;
     }
+    
     public static SolutionSet emptySolutionSet() {
-        final SolutionSet ss = new SolutionSet("noname",
-                "no problem",
-                "no subproblems",
-                "no feasibilityRepair",
+   	 // rem values for config make no sense
+        final SolutionSet ss = new SolutionSet("noname", "SubgradientSearch=no problem\n SubgradientSolution=no subproblems\n FeasibilityRepari=no feasibilityRepair\n",
                 null, 0.0, 1.0);
         return ss;
     }
