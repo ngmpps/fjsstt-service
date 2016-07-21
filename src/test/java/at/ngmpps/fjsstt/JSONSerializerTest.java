@@ -57,7 +57,7 @@ public class JSONSerializerTest {
             "6;3;3;6;4;4;6;4;6;0;11\\n22;22;22;0;11;0;22;22;0;18;18;6;6;7;14;11;11;15;7;7;15;6;6;14;6;14;11;0\\n\"," +
             "\"properties\":\"\"}";
 
-    SolutionSet solutionSet = ModelFactory.createSrfgSolutionSet();
+    SolutionSet solutionSet = null;
 
     @Before
     public void setUp() throws Exception {
@@ -116,6 +116,8 @@ public class JSONSerializerTest {
     public void deSerializeSolutionSet() throws IOException {
         // Serialize to JSON
         ObjectMapper mapper = new ObjectMapper();
+        solutionSet = ModelFactory.createSrfgSolutionSet(mapper.readValue(problemSetJson, ProblemSet.class));
+      		  
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         mapper.writeValue(out, solutionSet);
         String result = out.toString("UTF-8");

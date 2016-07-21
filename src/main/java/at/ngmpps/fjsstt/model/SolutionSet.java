@@ -16,9 +16,17 @@ public class SolutionSet {
     private String name;
 
     /**
-     * Configuration Information, such as "dual problem", "sub problems" or "feasibility repair"
+     * Problem configuration information, to understand what the solution is for 
      */
-    private String configuration;
+    private String problemFJS; 
+    /**
+     * Problem configuration information, to understand what the solution is for 
+     */
+    private String problemTransport;
+    /**
+     * Problem configuration information, to understand what the solution is for 
+     */
+    private String problemConfig;
 
     /**
      * A Map of Strings representing the solution, one entry per job.
@@ -45,13 +53,17 @@ public class SolutionSet {
     }
 
     public SolutionSet(String name,
-                       String configuration,
+   		 				  String problemFJS, 
+   		 				  String problemTransport,
+   		 				  String problemConfig, 
                        Map<String, String> solution,
                        Double lowerBound,
                        Double upperBound) {
 
         this.name = name;
-        this.configuration = configuration;
+        this.problemFJS = problemFJS;
+        this.problemTransport = problemTransport;
+        this.problemConfig = problemConfig;
         this.solution = solution;
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
@@ -61,8 +73,16 @@ public class SolutionSet {
         return name;
     }
 
-    public String getConfiguration() {
-        return configuration;
+    public String getProblemFJS() {
+        return problemFJS;
+    }
+    
+    public String getProblemTransport() {
+       return problemTransport;
+    }
+    
+    public String getProblemConfig() {
+       return problemConfig;
     }
 
     public Map<String, String> getSolution() {
@@ -81,8 +101,16 @@ public class SolutionSet {
         this.name = name;
     }
 
-    public void setConfiguration(String configuration) {
-        this.configuration = configuration;
+    public void setProblemFJS(String problemFJS) {
+       this.problemFJS = problemFJS;
+    }	
+   
+    public void setProblemTransport(String problemTransport) {
+      this.problemTransport=problemTransport;
+    }
+
+    public void setProblemConfig(String problemConfig) {
+       this.problemConfig=problemConfig;
     }
 
     public void setSolution(Map<String, String> solution) {
@@ -101,7 +129,9 @@ public class SolutionSet {
     public String toString() {
         return "SolutionSet{" +
                 "name='" + name + '\'' +
-                ", configuration='" + configuration + '\'' +
+                ", problemFJS='" + problemFJS + '\'' +
+                ", problemTransport='" + problemTransport + '\'' +
+                ", problemConfig='" + problemConfig + '\'' +
                 ", solution=" + solution +
                 ", lowerBound=" + lowerBound +
                 ", upperBound=" + upperBound +

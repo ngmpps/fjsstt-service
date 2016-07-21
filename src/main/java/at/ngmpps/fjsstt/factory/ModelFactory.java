@@ -111,9 +111,8 @@ public class ModelFactory {
         mySolution = Collections.unmodifiableMap(aSolution);
     }
 
-	public static SolutionSet createSrfgSolutionSet() {
-		// rem values for config make no sense
-		final SolutionSet ss = new SolutionSet("Algorithmus 1", "SubgradientSearch=Surrogate Subgradientenverfahren\n SubgradientSolution=Variable Nachbarschaftssuche\n FeasibilityRepari=List Scheduling\n",
+	public static SolutionSet createSrfgSolutionSet(ProblemSet problem) {
+		final SolutionSet ss = new SolutionSet("Algorithmus 1", problem.getFjs(), problem.getTransport(), problem.getProperties(),
                 mySolution, 537.5, 541.0);
 		return ss;
 	}
@@ -124,7 +123,7 @@ public class ModelFactory {
     
     public static SolutionSet emptySolutionSet() {
    	 // rem values for config make no sense
-        final SolutionSet ss = new SolutionSet("noname", "SubgradientSearch=no problem\n SubgradientSolution=no subproblems\n FeasibilityRepari=no feasibilityRepair\n",
+        final SolutionSet ss = new SolutionSet("noname", "","","",
                 null, 0.0, 1.0);
         return ss;
     }
