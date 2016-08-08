@@ -124,8 +124,8 @@ public class AsyncResource {
                     log.info("problem set parsed (hash: {})", problemSet.hashCode());
                     // DONE (gw): Calculate and return problem solution
                     FJSSTTproblem problem = parser.getProblem();
-                    // This generates an initial, but infeasible Solution.
-                    final Solution newS = new Solution(problem);
+                    // TODO (gw) this does not generate any solution, it just holds the data...
+                    final Solution newS = new Solution();
                     solutions.put(problemSet, newS);
                     // TODO: generate additional solutions and put them to the HashMap when new results are available
 
