@@ -1,13 +1,9 @@
 package at.ngmpps.fjsstt.rest;
 
-import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
-import at.ngmpps.fjsstt.model.SolutionSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
 import at.ngmpps.fjsstt.model.problem.Solution;
-import at.ngmpps.fjsstt.model.problem.subproblem.Bid;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +16,9 @@ import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @javax.ws.rs.Path("/asyncresource")
 public class AsyncResource {
@@ -33,6 +27,8 @@ public class AsyncResource {
     private static Throwable lastException = null;
 
     final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
+
+    final static Map<ProblemSet, Solution> solutions = Collections.synchronizedMap(new HashMap<>());
 
     @GET
     public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
@@ -102,48 +98,43 @@ public class AsyncResource {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                SolutionSet result = veryExpensiveOperation();
-                ar.resume(result);
+                try {
+                    Solution result = veryExpensiveOperation();
+                    ar.resume(result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
-            private SolutionSet veryExpensiveOperation() {
-                try {
+            private Solution veryExpensiveOperation() throws IOException {
+
+                synchronized (solutions) {
+                    final Solution oldS = solutions.get(problemSet);
+                    if (oldS != null) {
+                        log.info("returning existing solution (hash: {})", oldS.hashCode());
+                        return oldS;
+                    }
+
                     // build problem parser
                     ProblemParser parser = new ProblemParser();
-                    // DONE (gw): instrument the parser on the problemSet 
+                    // DONE (gw): instrument the parser on the problemSet
                     parser.parseProblem(problemSet.getFjs());
                     parser.parseTransportTimes(problemSet.getTransport());
                     parser.parseConfiguration(problemSet.getProperties());
-                    
+                    log.info("problem set parsed (hash: {})", problemSet.hashCode());
                     // DONE (gw): Calculate and return problem solution
                     FJSSTTproblem problem = parser.getProblem();
-                    // This generates an initial, but infeasible Solution. 
-                    Solution s = new Solution(problem);
+                    // This generates an initial, but infeasible Solution.
+                    final Solution newS = new Solution(problem);
+                    solutions.put(problemSet, newS);
+                    // TODO: generate additional solutions and put them to the HashMap when new results are available
 
-                    // TODO (fs): Transform Solution to SolutionSet (or directly return Solution, if possible)
-
-                    return ModelFactory.emptySolutionSet();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return ModelFactory.emptySolutionSet();
+                    log.info("returning new solution (hash: {})", newS.hashCode());
+                    return newS;
                 }
+
             }
         }).start();
     }
-
-    private List<Path> writeToFiles(ProblemSet problemSet) throws IOException {
-        final Path fjsFile = Files.createTempFile("PROBLEM", ".fjs");
-        List<String> lines = Arrays.asList(problemSet.getFjs().split("\n"));
-        Files.write(fjsFile, lines, Charset.forName("UTF-8"));
-        final Path transportFile = Files.createTempFile("PROBLEM", ".transport");
-        List<String> tLines = Arrays.asList(problemSet.getTransport().split("\n"));
-        Files.write(transportFile, tLines, Charset.forName("UTF-8"));
-        final Path propertiesFile = Files.createTempFile("PROBLEM", ".properties");
-        List<String> pLines = Arrays.asList(problemSet.getProperties().split("\n"));
-        Files.write(propertiesFile, pLines, Charset.forName("UTF-8"));
-        return Arrays.asList(fjsFile, transportFile, propertiesFile);
-    }
-
 
 }

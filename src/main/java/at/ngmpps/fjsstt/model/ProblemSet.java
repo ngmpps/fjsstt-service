@@ -62,4 +62,25 @@ public class ProblemSet {
                 ", properties='" + properties + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProblemSet that = (ProblemSet) o;
+
+        if (fjs != null ? !fjs.equals(that.fjs) : that.fjs != null) return false;
+        if (transport != null ? !transport.equals(that.transport) : that.transport != null) return false;
+        return properties != null ? properties.equals(that.properties) : that.properties == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = fjs != null ? fjs.hashCode() : 0;
+        result = 31 * result + (transport != null ? transport.hashCode() : 0);
+        result = 31 * result + (properties != null ? properties.hashCode() : 0);
+        return result;
+    }
 }
