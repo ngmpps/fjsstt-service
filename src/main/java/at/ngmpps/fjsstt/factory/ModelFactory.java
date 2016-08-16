@@ -38,6 +38,11 @@ public class ModelFactory {
 	public static ProblemSet createDummyProblemSet() {
 	    return new ProblemSet("dummyFJS", "dummyTransport", "dummyProp=xyz");
     }
+
+	public static ProblemSet createProblemSet(String fjs, String transport, String properties) {
+		return new ProblemSet(fjs, transport, properties);
+	}
+
 	public static ProblemSet createSrfgProblemSet() {
 		final ProblemSet ps = new ProblemSet("15 28\n" +
 				"6 2 2 3 5 5 2 14 4 15 5 3 19 5 20 6 21 8 3 22 4 23 3 24 6 3 25 5 26 4 28 6 3 19 5 20 6 21 8 0 45 1\n" +
