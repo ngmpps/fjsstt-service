@@ -73,7 +73,7 @@ public class JSONSerializerTest {
     public void jacksonTest() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         MyBean myBean = mapper.readValue(json, MyBean.class);
-        //System.out.printf("myBean: " + myBean);
+        System.out.printf("myBean: " + myBean);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         mapper.writeValue(out, myBean);
         String result = out.toString("UTF-8");
@@ -91,13 +91,11 @@ public class JSONSerializerTest {
     public void serializeProblemSet() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final ProblemSet expected = ModelFactory.createSrfgProblemSet();
-        mapper.writeValue(out, expected);
+        mapper.writeValue(out, ModelFactory.createSrfgProblemSet());
         String result = out.toString("UTF-8");
-        //System.out.println(result);
-        ProblemSet actual = mapper.readValue(result, ProblemSet.class);
-        //System.out.printf("ps: " + ps);
-        assertEquals(expected, actual);
+        System.out.println(result);
+        ProblemSet ps = mapper.readValue(result, ProblemSet.class);
+        System.out.printf("ps: " + ps);
 
     }
 
@@ -105,11 +103,11 @@ public class JSONSerializerTest {
     public void deserializeProblemSet() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         ProblemSet ps = mapper.readValue(problemSetJson, ProblemSet.class);
-        //System.out.printf("ps: " + ps);
+        System.out.printf("ps: " + ps);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         mapper.writeValue(out, ps);
         String result = out.toString("UTF-8");
-        //System.out.println(result);
+        System.out.println(result);
         assertEquals(problemSetJson, result);
 
     }
@@ -124,10 +122,10 @@ public class JSONSerializerTest {
         mapper.writeValue(out, solutionSet);
         String result = out.toString("UTF-8");
         // print the JSON
-        //System.out.println(result);
+        System.out.println(result);
         // Deserialize back to Java Object
         SolutionSet ss = mapper.readValue(result, SolutionSet.class);
-        //System.out.printf("ss: " + ss);
+        System.out.printf("ss: " + ss);
         assertEquals(solutionSet.toString(), ss.toString());
 
     }
