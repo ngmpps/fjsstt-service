@@ -3,6 +3,7 @@ package at.ngmpps.fjsstt;
 import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.SolutionSet;
+import at.ngmpps.fjsstt.model.problem.Solution;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
@@ -19,10 +20,11 @@ public class WSPostClient {
         ProblemSet ps = ModelFactory.createSrfgProblemSet();
         final Future<Response> responseFuture = asyncInvoker.post(Entity.json(ps));
         System.out.println("Request is being processed asynchronously.");
-        final Response response = responseFuture.get(5, TimeUnit.SECONDS);
+        final Response response = responseFuture.get(5, TimeUnit.MINUTES);
         // get() waits for the response to be ready
         System.out.println("Response received. " + response);
-        System.out.println("Content: " + response.readEntity(SolutionSet.class));
+        //System.out.println("Content as JSON-String: " + response.readEntity(String.class));
+        System.out.println("Content deserialized: " + response.readEntity(Solution.class));
         client.close();
 
     }
