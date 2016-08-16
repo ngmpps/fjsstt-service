@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
@@ -20,7 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@javax.ws.rs.Path("/asyncresource")
+@Path("/asyncresource")
 public class AsyncResource {
     private static int numberOfSuccessResponses = 0;
     private static int numberOfFailures = 0;
@@ -77,7 +78,7 @@ public class AsyncResource {
      * @return the SolutionSet, which can be parsed into a JSON Object
      */
     @POST
-    @javax.ws.rs.Path("/problem")
+    @Path("/problem")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void calcSolution(ProblemSet problemSet, @Suspended final AsyncResponse ar) throws InterruptedException {
