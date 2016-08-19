@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ProblemSetTest {
 
@@ -41,9 +42,8 @@ public class ProblemSetTest {
         assertNotNull(problemSet.getFjs());
         assertNotNull(problemSet.getTransport());
         assertNotNull(problemSet.getProperties());
-        assertEquals(599, problemSet.getFjs().length());
-        assertEquals(60, problemSet.getTransport().length());
-        assertEquals(1068, problemSet.getProperties().length());
-
+        assertTrue(problemSet.getFjs().length() > 100);
+        assertTrue(problemSet.getTransport().length() > 20);
+        assertTrue(problemSet.getProperties().length() > 500);
     }
 }
