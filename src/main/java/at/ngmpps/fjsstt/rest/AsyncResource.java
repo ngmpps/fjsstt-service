@@ -126,6 +126,8 @@ public class AsyncResource {
 
 				ActorHelper ah = new ActorHelper(problem, problem.getConfigurations(), true);
 				SolutionReady sr = ah.solve(500);
+				// you could use the method below to get 
+				//ah.getCurrentSolution(problemSet.hashCode());
 				solutions.put(problemSet.hashCode(), sr.getMinUpperBoundSolution());
 				// TODO: generate additional solutions and put them to the HashMap
 				// when new results are available
