@@ -81,6 +81,12 @@
 		</dependency>
 		<!-- dependency for DPC -->
 		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>2.4.0</version>
+		</dependency>
+		<!-- dependency for DPC -->
+		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-actor_2.11</artifactId>
 			<version>2.3.15</version>
