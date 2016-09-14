@@ -1,6 +1,5 @@
 package at.ngmpps.fjsstt.rest;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +34,8 @@ public class AsyncResource {
 	final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
 
 	final static Map<Integer, Solution> solutions = Collections.synchronizedMap(new HashMap<>());
+	ActorHelper ah = null;
+	Integer lastRequestId = -1;
 
 	@GET
 	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
@@ -52,9 +53,39 @@ public class AsyncResource {
 			}
 		});
 
-		// no problem Set paramenter =>> use default problem
-		ProblemSet ps = ModelFactory.createSrfgProblemSet();
-		new Thread(new TriggerSolution(ps, asyncResponse)).start();
+		// no problem Set paramenter =>> use default problem // do not set lastRequestId, keep old one (unless actor is started)
+		checkStartActors(ModelFactory.createSrfgProblemSet());
+		// using last requestId
+		getSolution(asyncResponse,lastRequestId);
+	}
+
+	public Integer checkStartActors(ProblemSet problemSet) {
+		if (ah == null) {
+			// reuse lastRequestId
+			synchronized (lastRequestId) {
+				lastRequestId = problemSet.hashCode();
+				FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+				// make sure we have the right ID!!
+				problem.setProblemId(lastRequestId);
+				log.info("problem set parsed (hash: {})", lastRequestId);
+				// do not wait for end result but take return the first one found =>
+				// false
+				ah = new ActorHelper(problem, problem.getConfigurations(), false);
+			}
+		}
+		return lastRequestId;
+	}
+	public Solution getSolution(AsyncResponse asyncResponse, Integer requestId) {
+		new Thread(new TriggerSolution(ah, requestId)).start();
+		synchronized (solutions) {
+			// we assuming - might be wrong - that this is about the last request
+			final Solution oldS = solutions.get(lastRequestId);
+			if (oldS != null)
+				asyncResponse.resume(oldS);
+			else
+				asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
+			return oldS;
+		}
 	}
 
 	/**
@@ -85,55 +116,39 @@ public class AsyncResource {
 			}
 		});
 
-		new Thread(new TriggerSolution(problemSet, asyncResponse)).start();
+		lastRequestId = checkStartActors(problemSet);
+		synchronized (solutions) {
+			// we assuming - might be wrong - that this is about the last request
+			final Solution oldS = solutions.get(lastRequestId);
+			if (oldS != null)
+				asyncResponse.resume(oldS);
+		}
 	}
 
 	class TriggerSolution implements Runnable {
 
-		AsyncResponse asyncResponse;
-		ProblemSet problemSet;
+		final Integer problemId;
+		final ActorHelper ah;
 
-		public TriggerSolution(ProblemSet problemSet, AsyncResponse ar) {
-			asyncResponse = ar;
-			this.problemSet = problemSet;
+		public TriggerSolution(final ActorHelper ah, final Integer problemId) {
+			this.problemId = problemId;
+			this.ah = ah;
 		}
 
 		@Override
 		public void run() {
-			try {
-				Solution result = doSolve(problemSet);
-				asyncResponse.resume(result);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+			SolutionReady sr = ah.getCurrentSolution(problemId);
+			// nothing found?
+			if (sr == null)
+				// this might cause problems on a slow or occupied server,
+				// starting the algo all the time  (timeout is ~10secs)
+				// solve might return the first solution found or wait for the
+				// final result -> see last param in ActorHelper()
+				sr = ah.solve(500);
 
-		private Solution doSolve(ProblemSet problemSet) throws IOException {
-
-			synchronized (solutions) {
-				final Solution oldS = solutions.get(problemSet);
-				if (oldS != null) {
-					log.info("returning existing solution (hash: {})", oldS.hashCode());
-					return oldS;
-				}
-
-				// build problem parser
-				FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
-				// make sure we have the right ID!!
-				problem.setProblemId(problemSet.hashCode());
-				// DONE (gw): instrument the parser on the problemSet
-				log.info("problem set parsed (hash: {})", problem.getProblemId());
-
-				ActorHelper ah = new ActorHelper(problem, problem.getConfigurations(), true);
-				SolutionReady sr = ah.solve(500);
-				// you could use the method below to get 
-				//ah.getCurrentSolution(problemSet.hashCode());
-				solutions.put(problemSet.hashCode(), sr.getMinUpperBoundSolution());
-				// TODO: generate additional solutions and put them to the HashMap
-				// when new results are available
-
-				log.info("returning new solution ({})", sr.getMinUpperBoundSolution());
-				return sr.getMinUpperBoundSolution();
+			if (sr != null) {
+				// return a Solution object (not a SolutionSet)
+				solutions.put(problemId, sr.getMinUpperBoundSolution());
 			}
 		}
 	}
