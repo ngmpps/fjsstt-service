@@ -62,8 +62,8 @@ public class AsyncResource {
 	public Integer checkStartActors(ProblemSet problemSet) {
 		if (ah == null) {
 			// reuse lastRequestId
+			lastRequestId = problemSet.hashCode();
 			synchronized (lastRequestId) {
-				lastRequestId = problemSet.hashCode();
 				FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
 				// make sure we have the right ID!!
 				problem.setProblemId(lastRequestId);
