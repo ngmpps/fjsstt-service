@@ -33,7 +33,6 @@ public class AsyncResource {
 
 	final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
 
-	final static Map<Integer, Solution> solutions = Collections.synchronizedMap(new HashMap<>());
 	ActorHelper ah = null;
 	Integer lastRequestId = -1;
 
@@ -56,7 +55,7 @@ public class AsyncResource {
 		// no problem Set paramenter =>> use default problem // do not set lastRequestId, keep old one (unless actor is started)
 		checkStartActors(ModelFactory.createSrfgProblemSet());
 		// using last requestId
-		getSolution(asyncResponse,lastRequestId);
+		getSolution(lastRequestId, asyncResponse);
 	}
 
 	public Integer checkStartActors(ProblemSet problemSet) {
@@ -75,17 +74,8 @@ public class AsyncResource {
 		}
 		return lastRequestId;
 	}
-	public Solution getSolution(AsyncResponse asyncResponse, Integer requestId) {
-		new Thread(new TriggerSolution(ah, requestId)).start();
-		synchronized (solutions) {
-			// we assuming - might be wrong - that this is about the last request
-			final Solution oldS = solutions.get(lastRequestId);
-			if (oldS != null)
-				asyncResponse.resume(oldS);
-			else
-				asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
-			return oldS;
-		}
+	public void getSolution(Integer requestId, AsyncResponse asyncResponse) {
+		new Thread(new TriggerSolution(ah, requestId, asyncResponse)).start();
 	}
 
 	/**
@@ -118,21 +108,24 @@ public class AsyncResource {
 
 		lastRequestId = checkStartActors(problemSet);
 		// using last requestId
-		getSolution(asyncResponse,lastRequestId);
+		getSolution(lastRequestId,asyncResponse);
 	}
 
 	class TriggerSolution implements Runnable {
 
 		final Integer problemId;
 		final ActorHelper ah;
+		final AsyncResponse asyncResponse;
 
-		public TriggerSolution(final ActorHelper ah, final Integer problemId) {
+		public TriggerSolution(final ActorHelper ah, final Integer problemId, AsyncResponse asyncResponse) {
 			this.problemId = problemId;
 			this.ah = ah;
+			this.asyncResponse = asyncResponse;
 		}
 
 		@Override
 		public void run() {
+			// blocks for ~10s
 			SolutionReady sr = ah.getCurrentSolution(problemId);
 			// nothing found?
 			if (sr == null)
@@ -144,7 +137,9 @@ public class AsyncResource {
 
 			if (sr != null) {
 				// return a Solution object (not a SolutionSet)
-				solutions.put(problemId, sr.getMinUpperBoundSolution());
+				asyncResponse.resume(sr.getMinUpperBoundSolution());
+			} else {
+				asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
 			}
 		}
 	}
