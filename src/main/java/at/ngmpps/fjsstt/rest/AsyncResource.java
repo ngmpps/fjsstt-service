@@ -1,5 +1,6 @@
 package at.ngmpps.fjsstt.rest;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
 import at.ngmpps.fjsstt.model.problem.Solution;
 import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
+import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReadyUI;
 
 @Path("/asyncresource")
 public class AsyncResource {
@@ -66,12 +68,7 @@ public class AsyncResource {
 		}
 	}
 	public void getSolution(ProblemSet problemSet, AsyncResponse asyncResponse) {
-		FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
-		// make sure we have the right ID!!
-		problem.setProblemId(problemSet.hashCode());
-		log.info("problem set parsed (hash: {})", problem.getProblemId());
-		
-		new Thread(new TriggerSolution(ah, problem, asyncResponse)).start();
+		new Thread(new TriggerSolution(ah, problemSet, asyncResponse)).start();
 	}
 
 	/**
@@ -107,13 +104,90 @@ public class AsyncResource {
 		getSolution(problemSet,asyncResponse);
 	}
 
+
+	@POST
+	@Path("/solution")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public void getUIFiles(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+        asyncResponse.setTimeoutHandler(new LocalTimeoutHandler());
+		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
+		asyncResponse.register(new CompletionCallback() {
+			@Override
+			public void onComplete(Throwable throwable) {
+				if (throwable == null) {
+					// no throwable - the processing ended successfully
+					// (response already written to the client)
+					numberOfSuccessResponses++;
+				} else {
+					numberOfFailures++;
+					lastException = throwable;
+				}
+			}
+		});
+
+		checkStartActors();
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// first get Solution with all values, then the files
+				SolutionReady sr = null;
+				try{
+					sr = ah.getCurrentSolution(problemSet.hashCode());
+				} catch (Exception e) {
+					// here we do nothing, but start a new algorithm
+
+				}
+				try{
+					// nothing found?
+					if (sr == null) {
+						// this might cause problems on a slow or occupied server,
+						// starting the algo all the time  (timeout is ~10secs)
+						// solve might return the first solution found or wait for the
+						// final results -> last boolean true = wait
+						FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+						// make sure we have the right ID!!
+						problem.setProblemId(problemSet.hashCode());
+						sr = ah.solve(problem, problem.getConfigurations(), 500, false);
+					}
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+				try {
+					SolutionReadyUI srui = ah.getCurrentSolutionFiles(problemSet.hashCode());
+					if(srui!=null) {
+						StringBuilder html = new StringBuilder();
+						html.append("<html><head><title>FJSSTT Problem Solved</title></head><body>");
+						if(sr!=null) {
+							html.append("<br />MaxLowerBound: ").append(sr.getMaxLowerBoundSolution());
+							html.append("<br />MinUpperBound: ").append(sr.getMinUpperBoundSolution());
+							html.append("<br />Algorithm is Finished?: ").append(sr.isFinished());
+							html.append("<br /><br /><br />");
+						}
+						for(String f : srui.getUiFiles()) {
+							html.append(f.substring(f.lastIndexOf(File.separatorChar)+1, f.length()));
+							html.append("<img src='").append(f).append("' style='width:300px;'>");
+						}
+						asyncResponse.resume(html.toString());
+					}
+				}catch (Exception e) {
+					asyncResponse.resume(e);
+				}
+				
+			}
+		}).start();
+}
+
+	
 	class TriggerSolution implements Runnable {
 
 		final ActorHelper ah;
 		final AsyncResponse asyncResponse;
-		final FJSSTTproblem problem;
+		final ProblemSet problem;
 
-		public TriggerSolution(final ActorHelper ah, final FJSSTTproblem problem , final AsyncResponse asyncResponse) {
+		public TriggerSolution(final ActorHelper ah, final ProblemSet problem , final AsyncResponse asyncResponse) {
 			this.ah = ah;
 			this.asyncResponse = asyncResponse;
 			this.problem = problem;
@@ -124,19 +198,24 @@ public class AsyncResource {
 			// blocks for ~10s - or returns null if no alorithm started to solve this problem
 			SolutionReady sr = null;
 			try{
-				sr = ah.getCurrentSolution(problem.getProblemId());
+				sr = ah.getCurrentSolution(problem.hashCode());
 			} catch (Exception e) {
 				// here we do nothing, but start a new algorithm
 			}
 			try{
 				// nothing found?
-				if (sr == null)
+				if (sr == null) {
+					FJSSTTproblem fjsstt = ProblemParser.parseStrings(problem.getFjs(), problem.getProperties(), problem.getTransport());
+					// make sure we have the right ID!!
+					fjsstt.setProblemId(problem.hashCode());
+					log.info("problem set parsed (hash: {})", fjsstt.getProblemId());
+
 					// this might cause problems on a slow or occupied server,
 					// starting the algo all the time  (timeout is ~10secs)
 					// solve might return the first solution found or wait for the
 					// final results -> last boolean true = wait
-					sr = ah.solve(problem, problem.getConfigurations(), 500, false);
-	
+					sr = ah.solve(fjsstt, fjsstt.getConfigurations(), 500, false);
+				}
 				if (sr != null) {
 					// return a Solution object (not a SolutionSet)
 					asyncResponse.resume(sr.getMinUpperBoundSolution());
