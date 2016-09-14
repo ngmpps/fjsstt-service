@@ -170,6 +170,7 @@ public class AsyncResource {
 							html.append(f.substring(f.lastIndexOf(File.separatorChar)+1, f.length()));
 							html.append("<img src='").append(f).append("' style='width:300px;'>");
 						}
+						html.append("</body></html>");
 						asyncResponse.resume(html.toString());
 					}
 				}catch (Exception e) {
