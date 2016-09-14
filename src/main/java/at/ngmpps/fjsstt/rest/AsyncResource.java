@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -13,7 +14,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,8 @@ public class AsyncResource {
 
 	@GET
 	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
+		asyncResponse.setTimeoutHandler(new LocalTimeoutHandler());
+		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 		asyncResponse.register(new CompletionCallback() {
 			@Override
 			public void onComplete(Throwable throwable) {
@@ -57,7 +62,7 @@ public class AsyncResource {
 		new Thread(new TriggerSolution(ps, asyncResponse)).start();
 	}
 
-	/**
+    /**
 	 * Method handling HTTP GET requests. The returned object will be sent to the
 	 * client as "application/json" media type.
 	 *
@@ -70,7 +75,8 @@ public class AsyncResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public void calcSolution(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
-
+        asyncResponse.setTimeoutHandler(new LocalTimeoutHandler());
+		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 		asyncResponse.register(new CompletionCallback() {
 			@Override
 			public void onComplete(Throwable throwable) {
@@ -104,7 +110,8 @@ public class AsyncResource {
 				Solution result = doSolve(problemSet);
 				asyncResponse.resume(result);
 			} catch (IOException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
+				log.error(e.getLocalizedMessage());
 			}
 		}
 
@@ -137,4 +144,11 @@ public class AsyncResource {
 			}
 		}
 	}
+
+    private class LocalTimeoutHandler implements TimeoutHandler {
+        @Override
+        public void handleTimeout(AsyncResponse resp) {
+            resp.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
+        }
+    }
 }
