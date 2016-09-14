@@ -117,12 +117,8 @@ public class AsyncResource {
 		});
 
 		lastRequestId = checkStartActors(problemSet);
-		synchronized (solutions) {
-			// we assuming - might be wrong - that this is about the last request
-			final Solution oldS = solutions.get(lastRequestId);
-			if (oldS != null)
-				asyncResponse.resume(oldS);
-		}
+		// using last requestId
+		getSolution(asyncResponse,lastRequestId);
 	}
 
 	class TriggerSolution implements Runnable {
