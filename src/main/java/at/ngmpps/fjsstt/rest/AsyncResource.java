@@ -34,7 +34,6 @@ public class AsyncResource {
 	final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
 
 	ActorHelper ah = null;
-	Integer lastRequestId = -1;
 
 	@GET
 	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
@@ -52,30 +51,22 @@ public class AsyncResource {
 			}
 		});
 
-		// no problem Set paramenter =>> use default problem // do not set lastRequestId, keep old one (unless actor is started)
-		checkStartActors(ModelFactory.createSrfgProblemSet());
-		// using last requestId
-		getSolution(lastRequestId, asyncResponse);
+		checkStartActors();
+		getSolution(ModelFactory.createSrfgProblemSet(), asyncResponse);
 	}
 
-	public Integer checkStartActors(ProblemSet problemSet) {
+	public void checkStartActors() {
 		if (ah == null) {
-			// reuse lastRequestId
-			lastRequestId = problemSet.hashCode();
-			synchronized (lastRequestId) {
-				FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
-				// make sure we have the right ID!!
-				problem.setProblemId(lastRequestId);
-				log.info("problem set parsed (hash: {})", lastRequestId);
-				// do not wait for end result but take return the first one found =>
-				// false
-				ah = new ActorHelper(problem, problem.getConfigurations(), false);
-			}
+				ah = new ActorHelper();
 		}
-		return lastRequestId;
 	}
-	public void getSolution(Integer requestId, AsyncResponse asyncResponse) {
-		new Thread(new TriggerSolution(ah, requestId, asyncResponse)).start();
+	public void getSolution(ProblemSet problemSet, AsyncResponse asyncResponse) {
+		FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+		// make sure we have the right ID!!
+		problem.setProblemId(problemSet.hashCode());
+		log.info("problem set parsed (hash: {})", problem.getProblemId());
+		
+		new Thread(new TriggerSolution(ah, problem, asyncResponse)).start();
 	}
 
 	/**
@@ -106,40 +97,48 @@ public class AsyncResource {
 			}
 		});
 
-		lastRequestId = checkStartActors(problemSet);
-		// using last requestId
-		getSolution(lastRequestId,asyncResponse);
+		checkStartActors();
+		getSolution(problemSet,asyncResponse);
 	}
 
 	class TriggerSolution implements Runnable {
 
-		final Integer problemId;
 		final ActorHelper ah;
 		final AsyncResponse asyncResponse;
+		final FJSSTTproblem problem;
 
-		public TriggerSolution(final ActorHelper ah, final Integer problemId, AsyncResponse asyncResponse) {
-			this.problemId = problemId;
+		public TriggerSolution(final ActorHelper ah, final FJSSTTproblem problem , final AsyncResponse asyncResponse) {
 			this.ah = ah;
 			this.asyncResponse = asyncResponse;
+			this.problem = problem;
 		}
 
 		@Override
 		public void run() {
-			// blocks for ~10s
-			SolutionReady sr = ah.getCurrentSolution(problemId);
-			// nothing found?
-			if (sr == null)
-				// this might cause problems on a slow or occupied server,
-				// starting the algo all the time  (timeout is ~10secs)
-				// solve might return the first solution found or wait for the
-				// final result -> see last param in ActorHelper()
-				sr = ah.solve(500);
-
-			if (sr != null) {
-				// return a Solution object (not a SolutionSet)
-				asyncResponse.resume(sr.getMinUpperBoundSolution());
-			} else {
-				asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
+			// blocks for ~10s - or returns null if no alorithm started to solve this problem
+			SolutionReady sr = null;
+			try{
+				ah.getCurrentSolution(problem.getProblemId());
+			} catch (Exception e) {
+				// here we do nothing, but start a new algorithm
+			}
+			try{
+				// nothing found?
+				if (sr == null)
+					// this might cause problems on a slow or occupied server,
+					// starting the algo all the time  (timeout is ~10secs)
+					// solve might return the first solution found or wait for the
+					// final results -> last boolean true = wait
+					sr = ah.solve(problem, problem.getConfigurations(), 500, false);
+	
+				if (sr != null) {
+					// return a Solution object (not a SolutionSet)
+					asyncResponse.resume(sr.getMinUpperBoundSolution());
+				} else {
+					asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
+				}
+			}catch(Exception e) {
+				asyncResponse.resume(e);
 			}
 		}
 	}
