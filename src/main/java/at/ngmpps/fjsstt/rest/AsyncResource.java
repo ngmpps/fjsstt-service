@@ -1,8 +1,9 @@
 package at.ngmpps.fjsstt.rest;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +11,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
@@ -17,6 +19,7 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +28,10 @@ import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
-import at.ngmpps.fjsstt.model.problem.Solution;
 import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReadyUI;
+import at.profactor.NgMPPS.UI.ConsoleProblemVisualiser;
 
 @Path("/asyncresource")
 public class AsyncResource {
@@ -37,8 +40,10 @@ public class AsyncResource {
 	private static Throwable lastException = null;
 
 	final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
+	
+	final static Map<String,String> imageTable = new Hashtable<String, String>();
 
-	ActorHelper ah = null;
+	static ActorHelper ah = null;
 
 	@GET
 	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
@@ -63,6 +68,8 @@ public class AsyncResource {
 	}
 
 	public void checkStartActors() {
+		// switch console output off
+		ConsoleProblemVisualiser.printoutStatus = false;
 		if (ah == null) {
 				ah = new ActorHelper();
 		}
@@ -108,7 +115,7 @@ public class AsyncResource {
 	@POST
 	@Path("/solution")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_XHTML_XML)
 	public void getUIFiles(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
         asyncResponse.setTimeoutHandler(new LocalTimeoutHandler());
 		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
@@ -125,7 +132,6 @@ public class AsyncResource {
 				}
 			}
 		});
-
 		checkStartActors();
 		
 		new Thread(new Runnable() {
@@ -150,6 +156,7 @@ public class AsyncResource {
 						FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
 						// make sure we have the right ID!!
 						problem.setProblemId(problemSet.hashCode());
+						//System.out.println("problem jobs: "+problem.getJobs()+" problem config: " + problem.getConfigurations());
 						sr = ah.solve(problem, problem.getConfigurations(), 500, false);
 					}
 				} catch(Exception e) {
@@ -159,18 +166,24 @@ public class AsyncResource {
 					SolutionReadyUI srui = ah.getCurrentSolutionFiles(problemSet.hashCode());
 					if(srui!=null) {
 						StringBuilder html = new StringBuilder();
-						html.append("<html><head><title>FJSSTT Problem Solved</title></head><body>");
+						// just the html to be inserted in page
+						//html.append("<html><head><title>FJSSTT Problem Solved</title></head><body>");
 						if(sr!=null) {
-							html.append("<br />MaxLowerBound: ").append(sr.getMaxLowerBoundSolution());
-							html.append("<br />MinUpperBound: ").append(sr.getMinUpperBoundSolution());
+							html.append("<br />MaxLowerBound: ").append(sr.getMaxLowerBoundSolution().getObjectiveValue());
+							html.append("<br />MinUpperBound: ").append(sr.getMinUpperBoundSolution().getObjectiveValue());
 							html.append("<br />Algorithm is Finished?: ").append(sr.isFinished());
 							html.append("<br /><br /><br />");
 						}
 						for(String f : srui.getUiFiles()) {
-							html.append(f.substring(f.lastIndexOf(File.separatorChar)+1, f.length()));
-							html.append("<img src='").append(f).append("' style='width:300px;'>");
+							html.append("<p class='text-info'>");
+							String filename = f.substring(f.lastIndexOf(File.separatorChar)+1, f.length());
+							imageTable.put(filename, f);
+							html.append(filename);
+							html.append("<br/><img src='rest/asyncresource/images/").append(filename).append("' style='width:100%;' />");
+							html.append("</p>");
 						}
-						html.append("</body></html>");
+						html.append("nr images:").append(imageTable.size());
+						//html.append("</body></html>");
 						asyncResponse.resume(html.toString());
 					}
 				}catch (Exception e) {
@@ -179,7 +192,32 @@ public class AsyncResource {
 				
 			}
 		}).start();
-}
+	}
+	
+	@Path("images/{name}")
+	@Produces("image/png")
+	@GET
+	public Response getImage(@PathParam("name") String name) {
+		//System.out.println("=========================================get image: " + name);
+		if(imageTable.containsKey(name)) {
+			//System.out.println("-------------------------------------------Filename: " + imageTable.get(name));
+			File f = new File(imageTable.get(name));
+			if(f.exists() && f.canRead()){
+				//System.out.println("can read" + f.getAbsolutePath());
+				try {
+				   return Response.ok(new FileInputStream(f)).build();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
+				return Response.status(Status.FORBIDDEN).build();
+			}
+		} else {
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+	}
 
 	
 	class TriggerSolution implements Runnable {
@@ -228,7 +266,8 @@ public class AsyncResource {
 			}
 		}
 	}
-
+	
+	
     private class LocalTimeoutHandler implements TimeoutHandler {
         @Override
         public void handleTimeout(AsyncResponse resp) {
