@@ -171,7 +171,7 @@ public class AsyncResource {
 						if(sr!=null) {
 							html.append("<br />MaxLowerBound: ").append(sr.getMaxLowerBoundSolution().getObjectiveValue());
 							html.append("<br />MinUpperBound: ").append(sr.getMinUpperBoundSolution().getObjectiveValue());
-							html.append("<br />Algorithm is Finished?: ").append(sr.isFinished());
+							html.append("<br />Algorithm is Finished? ").append(sr.isFinished());
 							html.append("<br /><br /><br />");
 						}
 						for(String f : srui.getUiFiles()) {
@@ -269,6 +269,9 @@ public class AsyncResource {
 	
 	
     private class LocalTimeoutHandler implements TimeoutHandler {
+   	 public LocalTimeoutHandler() {
+   		 
+   	 }
         @Override
         public void handleTimeout(AsyncResponse resp) {
             resp.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());

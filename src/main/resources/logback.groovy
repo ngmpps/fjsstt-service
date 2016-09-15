@@ -3,4 +3,4 @@ appender("Console-Appender", ConsoleAppender) {
         pattern = "%d %highlight(%-5level) [%thread] %cyan(%logger{15}) - %msg %n"
     }
 }
-root(INFO,["Console-Appender"])
+root(warn,["Console-Appender"])

@@ -1,15 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="bootstrap.min.css" >
-<link rel="stylesheet" href="dashboard.css" >
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Welcome Page</title>
+   <meta charset="utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="bootstrap.min.css" >
+	<link rel="stylesheet" href="dashboard.css" >
+	<title>Distributed Production Control</title>
 </head>
 <body>
+	<nav class="navbar navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="icon-bar" > </span>
+            <span class="icon-bar" > </span>
+            <span class="icon-bar" > </span>
+          </button>
+          <a class="navbar-brand" href="index.jsp"> NgMPPS </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-left">
+            <li><a href="index.jsp">Start</a></li>
+            <li><a href="dpc.jsp">DPC</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
 	<div class="container-fluid">
       <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
+        <div class="col-sm-4 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             <li ><a href="/fjsstt-service">Start</a></li>
             <li><a href="/fjsstt-service/rest/myresource">Jersey resource</a></li>
@@ -18,17 +39,20 @@
           </ul>
           <ul class="nav nav-sidebar">
             <li ></li>
-            <li><a href="#" class="active">DPC</a></li>
+            <li class="active"><a href="#" >DPC</a></li>
           </ul>
         </div>
       </div>
  	</div>
- 	<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
- 		
+ 	<div class="col-sm-8 offset-sm-2 col-md-10 offset-md-2 main">
+	<div  class="container-fluid">
+	<img src="salzburgresearch.png" style="height:60px;float:left;" /><img src="PROFACTOR_logo_weiss.jpg" style="v-align:bottom;height:30px;float:right;" />
+   </div>
  		<h1> Distributed Production Control </h1>
- 	    <h2>Post Content</h2>
+ 	    <h2>Optimise Production</h2>
  	
-		<a class="btn btn-secondary" href="#" role="button" id="post" > POST </a><br/>
+		<a class="btn btn-secondary" href="#" role="button" id="post" > Start Optimisation </a>
+		<a class="btn btn-secondary" href="#" role="button" id="image_reload" > Reload Images </a><br/>
 		
 		<span class="text-info" id="output" ></span><br/>
 		
@@ -37,9 +61,9 @@
 		<span class="text-danger" id="errorstatus" ></span><br/>
 			
 
-<form>
+<form class="form-inline form-horizontal">
 
-<div class="form-group">
+<div class="form-group-lg">
 <label for="fjs">fjs</label><br />
 <textarea class="form-control"  id="fjs" >
 15 28
@@ -62,7 +86,7 @@
 </div>
 
 
-<div class="form-group">
+<div class="form-group-lg">
 <label for="transport">transport</label><br/>
 <textarea class="form-control" id="transport">
 0;0;0;22;5;22;0;0;22;8;8;4;4;13;11;5;5;7;13;13;7;4;4;11;4;11;5;22
@@ -97,7 +121,7 @@
 </div>
 
 
-<div class="form-group">
+<div class="form-group-lg">
 <label for="properties">properties</label><br/>
 <textarea class="form-control" id="properties">
 SimpleSearch.Alpha=2.0
@@ -157,6 +181,15 @@ $(document).ready(function(){
 			  dataType: "html",
 			  contentType: "application/json"
 			});
+    });
+});
+$(image_reload).click(function () {
+	var t = new Date().getTime();
+    $("img").each(function(index){
+	    var src = $(this).attr('src');
+	    var i = src.indexOf('?dummy=');
+	    src = i != -1 ? src.substring(0, i) : src;
+	    $(this).attr('src', src + '?dummy=' + t);
     });
 });
 </script>
