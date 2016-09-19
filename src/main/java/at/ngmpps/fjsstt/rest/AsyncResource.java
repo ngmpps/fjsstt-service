@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
+import at.ngmpps.fjsstt.model.SolutionSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
 import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
@@ -169,10 +170,10 @@ public class AsyncResource {
 						// just the html to be inserted in page
 						//html.append("<html><head><title>FJSSTT Problem Solved</title></head><body>");
 						if(sr!=null) {
-							html.append("<br />MaxLowerBound: ").append(sr.getMaxLowerBoundSolution().getObjectiveValue());
-							html.append("<br />MinUpperBound: ").append(sr.getMinUpperBoundSolution().getObjectiveValue());
-							html.append("<br />Algorithm is Finished? ").append(sr.isFinished());
-							html.append("<br /><br /><br />");
+							html.append("<br /><span id=\"maxlowerbound\">MaxLowerBound: ").append(sr.getMaxLowerBoundSolution().getObjectiveValue());
+							html.append("</span><span id=\"minupperbound\"><br />MinUpperBound: ").append(sr.getMinUpperBoundSolution().getObjectiveValue());
+							html.append("</span><br /><span id=\"algofinished\">Algorithm is Finished? ").append(sr.isFinished());
+							html.append("</span><br /><br /><br />");
 						}
 						for(String f : srui.getUiFiles()) {
 							html.append("<p class='text-info'>");
@@ -194,6 +195,24 @@ public class AsyncResource {
 		}).start();
 	}
 	
+	@POST
+	@Path("/currentsolution")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCurrentSolution(final ProblemSet problemSet) throws InterruptedException {
+		SolutionReady sr = null;
+		try{
+			sr = ah.getCurrentSolution(problemSet.hashCode());
+			FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+			if(sr != null && fjsstt != null)
+				return Response.ok(new SolutionSet(problemSet, fjsstt, sr.getMinUpperBoundSolution(),sr.getMaxLowerBoundSolution())).build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+		return Response.status(Status.NOT_FOUND).build();
+	}
+	
 	@Path("images/{name}")
 	@Produces("image/png")
 	@GET
@@ -207,8 +226,7 @@ public class AsyncResource {
 				try {
 				   return Response.ok(new FileInputStream(f)).build();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//quietly ignore if we can not access the png (e.g. because its currently written
 				}
 			} else {
 				return Response.status(Status.FORBIDDEN).build();
@@ -242,9 +260,10 @@ public class AsyncResource {
 				// here we do nothing, but start a new algorithm
 			}
 			try{
+				FJSSTTproblem fjsstt = null;
 				// nothing found?
 				if (sr == null) {
-					FJSSTTproblem fjsstt = ProblemParser.parseStrings(problem.getFjs(), problem.getProperties(), problem.getTransport());
+					fjsstt = ProblemParser.parseStrings(problem.getFjs(), problem.getProperties(), problem.getTransport());
 					// make sure we have the right ID!!
 					fjsstt.setProblemId(problem.hashCode());
 					log.info("problem set parsed (hash: {})", fjsstt.getProblemId());
@@ -255,9 +274,9 @@ public class AsyncResource {
 					// final results -> last boolean true = wait
 					sr = ah.solve(fjsstt, fjsstt.getConfigurations(), 500, false);
 				}
-				if (sr != null) {
-					// return a Solution object (not a SolutionSet)
-					asyncResponse.resume(sr.getMinUpperBoundSolution());
+				if (sr != null && fjsstt !=null) {
+					// return a SolutionSet
+					asyncResponse.resume(new SolutionSet(problem, fjsstt, sr.getMinUpperBoundSolution(),sr.getMaxLowerBoundSolution()));
 				} else {
 					asyncResponse.resume(new Throwable("nothing found sofar :-( maybe a bit later"));
 				}
