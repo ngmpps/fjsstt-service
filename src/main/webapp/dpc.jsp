@@ -227,7 +227,7 @@ SurrogateSearch.NoSubproblems=10
 SurrogateSearch.FixedInitialStepsize=true
 SurrogateSearch.EstimatedOptimalDualCost=-1
 SurrogateSearch.InitialStepsize=0.2
-SubgradientSearch.SearchType=Both
+SubgradientSearch.SearchType=SurrogateSubgradientSearch
 SubproblemSolver.type=VariableNeighbourhoodSearch
 SimpleSearch.IterationsUntilHalvingAlpha=20
 SubproblemSolver.LS_altMachine_tries=1
@@ -270,7 +270,7 @@ SimpleSearch.IterationsUntilFeasibilityRepair=2
 </span>
 <span id="properties_WT3A" style="display:none;">SubgradientSearch.NrTimeSlots = 2000
 #SurrogateSubgradientSearch or SimpleSubgradientSearch or Both
-SubgradientSearch.SearchType = Both
+SubgradientSearch.SearchType = SurrogateSubgradientSearch
 SubgradientSearch.TransportFile = WT3A.transport
 
 ##configuration file for WT3 problem of NgMPPS
