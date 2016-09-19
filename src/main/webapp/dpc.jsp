@@ -63,7 +63,7 @@
 		<span class="text-danger" id="errorstatus" ></span><br/>
 			
 
-<form class="form-inline form-horizontal">
+<form class="form-horizontal  container-fluid">
 
 <div class="form-group-lg">
 <label for="fjs">fjs</label><br />
