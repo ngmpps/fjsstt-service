@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -29,9 +31,11 @@ import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.SolutionSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
+import at.ngmpps.fjsstt.model.problem.subproblem.SubproblemSolverConfig;
 import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReadyUI;
+import at.profactor.NgMPPS.DualProblem.SubgradientSearch;
 import at.profactor.NgMPPS.UI.ConsoleProblemVisualiser;
 
 @Path("/asyncresource")
@@ -147,6 +151,7 @@ public class AsyncResource {
 					// here we do nothing, but start a new algorithm
 
 				}
+				checkConfiguration(problemSet);
 				try{
 					// nothing found?
 					if (sr == null) {
@@ -157,6 +162,7 @@ public class AsyncResource {
 						FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
 						// make sure we have the right ID!!
 						problem.setProblemId(problemSet.hashCode());
+						
 						//System.out.println("problem jobs: "+problem.getJobs()+" problem config: " + problem.getConfigurations());
 						sr = ah.solve(problem, problem.getConfigurations(), 500, false);
 					}
@@ -201,6 +207,7 @@ public class AsyncResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCurrentSolution(final ProblemSet problemSet) throws InterruptedException {
 		SolutionReady sr = null;
+		checkConfiguration(problemSet);
 		try{
 			sr = ah.getCurrentSolution(problemSet.hashCode());
 			FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
@@ -247,7 +254,7 @@ public class AsyncResource {
 		public TriggerSolution(final ActorHelper ah, final ProblemSet problem , final AsyncResponse asyncResponse) {
 			this.ah = ah;
 			this.asyncResponse = asyncResponse;
-			this.problem = problem;
+			this.problem = checkConfiguration(problem);
 		}
 
 		@Override
@@ -285,7 +292,51 @@ public class AsyncResource {
 			}
 		}
 	}
-	
+	/**
+	 * make sure, that we execute one run and only one valid run
+	 * since the id is important to identify the problem, we have to correct the config beforehand
+	 * @param configuration
+	 */
+	protected ProblemSet checkConfiguration(ProblemSet problemSet){
+		String config = problemSet.getProperties();
+		Pattern dualproblemBoth = Pattern.compile(SubgradientSearch.SEARCH_TYPE_KEY+"[ ]*=[ ]*"+SubgradientSearch.SEARCH_TYPE_BOTH, Pattern.CASE_INSENSITIVE);
+		Pattern dualproblemSurrogate = Pattern.compile(SubgradientSearch.SEARCH_TYPE_KEY+"[ ]*=[ ]*"+SubgradientSearch.SEARCH_TYPE_SURROGATE_SUBGRADIENT_SEARCH, Pattern.CASE_INSENSITIVE);
+
+		Pattern subProblemSearchDP = Pattern.compile(SubproblemSolverConfig.TYPE_KEY+"[ ]*=[ ]*"+SubproblemSolverConfig.TYPE_DP, Pattern.CASE_INSENSITIVE);
+		Pattern subProblemSearchVNS = Pattern.compile(SubproblemSolverConfig.TYPE_KEY+"[ ]*=[ ]*"+SubproblemSolverConfig.TYPE_VNS, Pattern.CASE_INSENSITIVE);
+		
+		boolean useVNS = false;
+		Matcher dualproblemBothM = dualproblemBoth.matcher(config); 
+		if(dualproblemBothM.find()){
+			System.out.println("Both");
+			config = config.substring(0, dualproblemBothM.start()) + 
+					"\n" + 
+					SubgradientSearch.SEARCH_TYPE_KEY+" = "+SubgradientSearch.SEARCH_TYPE_SURROGATE_SUBGRADIENT_SEARCH+"\n"+
+					config.substring(dualproblemBothM.end());
+			useVNS = true;
+		} else  if(dualproblemSurrogate.matcher(config).find()) {
+			useVNS = true;
+			System.out.println("Surrogate");
+		}
+		Matcher subProblemSearchDPM = subProblemSearchDP.matcher(config);
+		Matcher subProblemSearchVNSM = subProblemSearchVNS.matcher(config);
+		if (useVNS &&subProblemSearchDPM.find()) {
+			config = config.substring(0, subProblemSearchDPM.start()) + 
+					"\n" + 
+					SubproblemSolverConfig.TYPE_KEY+" = "+SubproblemSolverConfig.TYPE_VNS+"\n"+
+					config.substring(subProblemSearchDPM.end());
+			System.out.println("VNS");
+		} else if (!useVNS && subProblemSearchVNSM.find()) {
+			config = config.substring(0, subProblemSearchDPM.start()) + 
+					"\n" + 
+					SubproblemSolverConfig.TYPE_KEY+" = "+SubproblemSolverConfig.TYPE_DP+"\n"+
+					config.substring(subProblemSearchDPM.end());
+			System.out.println("DP");
+		}
+		problemSet.setProperties(config);
+		System.out.println(config);
+		return problemSet;
+	}
 	
     private class LocalTimeoutHandler implements TimeoutHandler {
    	 public LocalTimeoutHandler() {
@@ -296,4 +347,5 @@ public class AsyncResource {
             resp.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
         }
     }
+    
 }

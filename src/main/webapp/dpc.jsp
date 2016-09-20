@@ -97,9 +97,9 @@
 <script>
 $(document).ready(function(){
     $(post).click(function(){
-        var fjsData = $("#fjs").text();
-        var transportData = $("#transport").text();
-        var propertiesData = $("#properties").text();
+        var fjsData = $("#fjs").val();
+        var transportData = $("#transport").val();
+        var propertiesData = $("#properties").val();
         
         $.ajax({
 			  type: "POST",
@@ -128,9 +128,9 @@ $(image_reload).click(function () {
 	    src = i != -1 ? src.substring(0, i) : src;
 	    $(this).attr('src', src + '?dummy=' + t);
     });
-    var fjsData = $("#fjs").text();
-     var transportData = $("#transport").text();
-     var propertiesData = $("#properties").text();
+    var fjsData = $("#fjs").val();
+     var transportData = $("#transport").val();
+     var propertiesData = $("#properties").val();
     
     
     $.ajax({
