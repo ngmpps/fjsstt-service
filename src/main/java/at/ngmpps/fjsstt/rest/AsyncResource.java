@@ -308,7 +308,6 @@ public class AsyncResource {
 		boolean useVNS = false;
 		Matcher dualproblemBothM = dualproblemBoth.matcher(config); 
 		if(dualproblemBothM.find()){
-			System.out.println("Both");
 			config = config.substring(0, dualproblemBothM.start()) + 
 					"\n" + 
 					SubgradientSearch.SEARCH_TYPE_KEY+" = "+SubgradientSearch.SEARCH_TYPE_SURROGATE_SUBGRADIENT_SEARCH+"\n"+
@@ -316,7 +315,6 @@ public class AsyncResource {
 			useVNS = true;
 		} else  if(dualproblemSurrogate.matcher(config).find()) {
 			useVNS = true;
-			System.out.println("Surrogate");
 		}
 		Matcher subProblemSearchDPM = subProblemSearchDP.matcher(config);
 		Matcher subProblemSearchVNSM = subProblemSearchVNS.matcher(config);
@@ -325,16 +323,13 @@ public class AsyncResource {
 					"\n" + 
 					SubproblemSolverConfig.TYPE_KEY+" = "+SubproblemSolverConfig.TYPE_VNS+"\n"+
 					config.substring(subProblemSearchDPM.end());
-			System.out.println("VNS");
 		} else if (!useVNS && subProblemSearchVNSM.find()) {
 			config = config.substring(0, subProblemSearchDPM.start()) + 
 					"\n" + 
 					SubproblemSolverConfig.TYPE_KEY+" = "+SubproblemSolverConfig.TYPE_DP+"\n"+
 					config.substring(subProblemSearchDPM.end());
-			System.out.println("DP");
 		}
 		problemSet.setProperties(config);
-		System.out.println(config);
 		return problemSet;
 	}
 	
