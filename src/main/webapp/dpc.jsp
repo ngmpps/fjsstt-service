@@ -109,12 +109,13 @@ $(document).ready(function(){
             	$(output).html(data);
             	// text is requird if return values contain no proper html
             	$(successstatus).text(status);
+	        	  	$(errorstatus).text("");
         		},
         	  error: function (jqXHR, status, errorThrown){
-        	  	// text is requird if return values contain no proper html
-        	  	$(errorstatus).text(status);
-        	  	$(output).text(errorThrown);
-        	  },
+	        	  	// text is requird if return values contain no proper html
+	        	  	$(errorstatus).text(status + "<br />" + errorThrown );
+            	$(successstatus).text("");
+	        	  },
 			  dataType: "html",
 			  contentType: "application/json"
 			});
@@ -138,17 +139,16 @@ $(image_reload).click(function () {
 			  url: "rest/asyncresource/currentsolution",
 			  data: JSON.stringify({ fjs: fjsData, transport: transportData, properties: propertiesData }),
 			  success: function(data,status,xhr){
-            	$(minupperbound).html("");
-    				$(maxlowerbound).html("");
     				var json = $.parseJSON(data);
             	$(minupperbound).html("MinUpperBound: "+json.minUpperBoundSolution+"<br/>");
-    				$(maxlowerbound).html("MaxLowerBound: "+json.maxLowerBoundSolution+"<br/>");
+    				$(maxlowerbound).html("MaxLowerBound: "+json.maxLowerBoundSolution);
     				$(successstatus).text(status);
+    				$(errorstatus).text("");
         		},
         	  error: function (jqXHR, status, errorThrown){
-        	  	// text is requird if return values contain no proper html
-        	  	$(errorstatus).text(status);
-        	  	$(output).text(errorThrown);
+	        	  	// text is requird if return values contain no proper html
+	        	  	$(errorstatus).text(status + "<br />" + errorThrown );
+            	$(successstatus).text("");
         	  },
 			  dataType: "html",
 			  contentType: "application/json"
