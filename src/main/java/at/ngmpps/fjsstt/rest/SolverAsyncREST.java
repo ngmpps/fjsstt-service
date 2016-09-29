@@ -1,0 +1,202 @@
+package at.ngmpps.fjsstt.rest;
+
+import at.ngmpps.fjsstt.factory.ModelFactory;
+import at.ngmpps.fjsstt.factory.ProblemParser;
+import at.ngmpps.fjsstt.model.ProblemSet;
+import at.ngmpps.fjsstt.model.SolutionSet;
+import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
+import at.ngmpps.fjsstt.model.problem.Solution;
+import at.ngmpps.fjsstt.model.problem.subproblem.SubproblemSolverConfig;
+import at.profactor.NgMPPS.ActorHelper;
+import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
+import at.profactor.NgMPPS.DualProblem.SubgradientSearch;
+import at.profactor.NgMPPS.UI.ConsoleProblemVisualiser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.CompletionCallback;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Path("/solver")
+@Singleton
+public class SolverAsyncREST {
+    private static int numberOfSuccessResponses = 0;
+    private static int numberOfFailures = 0;
+    private static Throwable lastException = null;
+
+    private final static Logger log = LoggerFactory.getLogger(SolverAsyncREST.class);
+
+    private final static Map<String, String> imageTable = new Hashtable<String, String>();
+
+    private static ActorHelper ah = null;
+
+    private void checkStartActors() {
+        // switch console output off
+        ConsoleProblemVisualiser.printoutStatus = false;
+        if (ah == null) {
+            ah = new ActorHelper();
+        }
+    }
+
+    @POST
+    @Path("/solution")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void getSolution(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+        // Start with input validation of "problemSet", before SolverThread is spawned.
+        checkConfiguration(problemSet); // THIS CALL MAY MODIFY THE HASHCODE!!
+        FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+        // make sure we have the right ID!!
+        problem.setProblemId(problemSet.hashCode());
+        log.debug("problem jobs: {} problem config: {}", problem.getJobs(), problem.getConfigurations());
+
+        // dummy solutionset, in case we run into timeout.
+        asyncResponse.setTimeoutHandler(new SolverAsyncREST.LocalTimeoutHandler());
+        asyncResponse.setTimeout(20, TimeUnit.SECONDS);
+        asyncResponse.register(new CompletionCallback() {
+            @Override
+            public void onComplete(Throwable throwable) {
+                if (throwable == null) {
+                    // no throwable - the processing ended successfully
+                    // (response already written to the client)
+                    numberOfSuccessResponses++;
+                } else {
+                    numberOfFailures++;
+                    lastException = throwable;
+                }
+            }
+        });
+        checkStartActors();
+
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                // first get Solution with all values, then the files
+                SolutionReady sr = null;
+                SolutionSet solset = ModelFactory.emptySolutionSet();
+                try {
+                    sr = ah.getCurrentSolution(problemSet.hashCode());
+                    solset = new SolutionSet(problemSet, problem, sr.getMinUpperBoundSolution(), sr.getMaxLowerBoundSolution());
+                    asyncResponse.resume(solset);
+                } catch (Exception e) {
+                    // we need to start a new algorithm
+                    log.info("no existing solution for {} - start new algorithm!", problemSet.hashCode());
+                    try {
+                        // nothing found?
+                        if (sr == null) {
+                            // this might cause problems on a slow or occupied server,
+                            // starting the algo all the time  (timeout is ~10secs)
+                            // solve might return the first solution found or wait for the
+                            // final results -> last boolean true = waitForEndResults
+                            sr = ah.solve(problem, problem.getConfigurations(), 500, false);
+                        }
+                        // we got a solution before the timeout, we can return it!
+                        if (sr != null) {
+                            solset = new SolutionSet(problemSet, problem, sr.getMinUpperBoundSolution(), sr.getMaxLowerBoundSolution());
+                        }
+                        asyncResponse.resume(solset);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * @param problemSet a problem set containing FJS, Transport and Properties Strings.
+     * @return the current solution
+     * @throws InterruptedException
+     */
+    @POST
+    @Path("/currentsolution")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getCurrentSolution(final ProblemSet problemSet) throws InterruptedException {
+        SolutionReady sr;
+        checkConfiguration(problemSet);
+        checkStartActors();
+        try {
+            sr = ah.getCurrentSolution(problemSet.hashCode());
+            FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
+            if (sr != null && fjsstt != null) {
+                final Solution minUpperBoundSolution = sr.getMinUpperBoundSolution();
+                final Solution maxLowerBoundSolution = sr.getMaxLowerBoundSolution();
+                final SolutionSet result = new SolutionSet(problemSet, fjsstt, minUpperBoundSolution, maxLowerBoundSolution);
+                return Response.ok(result).build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    /**
+     * make sure, that we execute one run and only one valid run
+     * since the id is important to identify the problem, we have to correct the config beforehand
+     *
+     * @param problemSet the ProblemSet where properties should be fixed.
+     */
+    private ProblemSet checkConfiguration(ProblemSet problemSet) {
+        String config = problemSet.getProperties();
+        Pattern dualproblemBoth = Pattern.compile(SubgradientSearch.SEARCH_TYPE_KEY + "[ ]*=[ ]*" + SubgradientSearch.SEARCH_TYPE_BOTH, Pattern.CASE_INSENSITIVE);
+        Pattern dualproblemSurrogate = Pattern.compile(SubgradientSearch.SEARCH_TYPE_KEY + "[ ]*=[ ]*" + SubgradientSearch.SEARCH_TYPE_SURROGATE_SUBGRADIENT_SEARCH, Pattern.CASE_INSENSITIVE);
+
+        Pattern subProblemSearchDP = Pattern.compile(SubproblemSolverConfig.TYPE_KEY + "[ ]*=[ ]*" + SubproblemSolverConfig.TYPE_DP, Pattern.CASE_INSENSITIVE);
+        Pattern subProblemSearchVNS = Pattern.compile(SubproblemSolverConfig.TYPE_KEY + "[ ]*=[ ]*" + SubproblemSolverConfig.TYPE_VNS, Pattern.CASE_INSENSITIVE);
+
+        boolean useVNS = false;
+        Matcher dualproblemBothM = dualproblemBoth.matcher(config);
+        if (dualproblemBothM.find()) {
+            config = config.substring(0, dualproblemBothM.start()) +
+                    "\n" +
+                    SubgradientSearch.SEARCH_TYPE_KEY + " = " + SubgradientSearch.SEARCH_TYPE_SURROGATE_SUBGRADIENT_SEARCH + "\n" +
+                    config.substring(dualproblemBothM.end());
+            useVNS = true;
+        } else if (dualproblemSurrogate.matcher(config).find()) {
+            useVNS = true;
+        }
+        Matcher subProblemSearchDPM = subProblemSearchDP.matcher(config);
+        Matcher subProblemSearchVNSM = subProblemSearchVNS.matcher(config);
+        if (useVNS && subProblemSearchDPM.find()) {
+            config = config.substring(0, subProblemSearchDPM.start()) +
+                    "\n" +
+                    SubproblemSolverConfig.TYPE_KEY + " = " + SubproblemSolverConfig.TYPE_VNS + "\n" +
+                    config.substring(subProblemSearchDPM.end());
+        } else if (!useVNS && subProblemSearchVNSM.find()) {
+            config = config.substring(0, subProblemSearchDPM.start()) +
+                    "\n" +
+                    SubproblemSolverConfig.TYPE_KEY + " = " + SubproblemSolverConfig.TYPE_DP + "\n" +
+                    config.substring(subProblemSearchDPM.end());
+        }
+        problemSet.setProperties(config);
+        return problemSet;
+    }
+
+    private class LocalTimeoutHandler implements TimeoutHandler {
+        LocalTimeoutHandler() {
+        }
+
+        @Override
+        public void handleTimeout(AsyncResponse resp) {
+            resp.resume(Response.status(Response.Status.OK).entity(ModelFactory.emptySolutionSet()).build());
+        }
+    }
+
+}
