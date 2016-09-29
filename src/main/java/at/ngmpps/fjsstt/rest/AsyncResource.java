@@ -208,6 +208,7 @@ public class AsyncResource {
 	public Response getCurrentSolution(final ProblemSet problemSet) throws InterruptedException {
 		SolutionReady sr = null;
 		checkConfiguration(problemSet);
+		checkStartActors();
 		try{
 			sr = ah.getCurrentSolution(problemSet.hashCode());
 			FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
