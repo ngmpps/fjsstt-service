@@ -5,7 +5,6 @@ import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
 import at.ngmpps.fjsstt.model.SolutionSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
-import at.ngmpps.fjsstt.model.problem.Solution;
 import at.ngmpps.fjsstt.model.problem.subproblem.SubproblemSolverConfig;
 import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
@@ -56,7 +55,7 @@ public class SolverAsyncREST {
     @Path("/solution")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void getSolution(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+    public void postSolution(final ProblemSet problemSet, @Suspended final AsyncResponse asyncResponse) throws InterruptedException {
         // Start with input validation of "problemSet", before SolverThread is spawned.
         checkConfiguration(problemSet); // THIS CALL MAY MODIFY THE HASHCODE!!
         FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
@@ -64,8 +63,13 @@ public class SolverAsyncREST {
         problem.setProblemId(problemSet.hashCode());
         log.debug("problem jobs: {} problem config: {}", problem.getJobs(), problem.getConfigurations());
 
-        // dummy solutionset, in case we run into timeout.
-        asyncResponse.setTimeoutHandler(new SolverAsyncREST.LocalTimeoutHandler());
+        // after 20 Seconds, an empty SolutionSet is returned, if none is available.
+        asyncResponse.setTimeoutHandler(new TimeoutHandler() {
+            @Override
+            public void handleTimeout(AsyncResponse asyncResponse) {
+                asyncResponse.resume(Response.status(Response.Status.OK).entity(ModelFactory.emptySolutionSet()).build());
+            }
+        });
         asyncResponse.setTimeout(20, TimeUnit.SECONDS);
         asyncResponse.register(new CompletionCallback() {
             @Override
@@ -119,35 +123,6 @@ public class SolverAsyncREST {
     }
 
     /**
-     * @param problemSet a problem set containing FJS, Transport and Properties Strings.
-     * @return the current solution
-     * @throws InterruptedException
-     */
-    @POST
-    @Path("/currentsolution")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getCurrentSolution(final ProblemSet problemSet) throws InterruptedException {
-        SolutionReady sr;
-        checkConfiguration(problemSet);
-        checkStartActors();
-        try {
-            sr = ah.getCurrentSolution(problemSet.hashCode());
-            FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
-            if (sr != null && fjsstt != null) {
-                final Solution minUpperBoundSolution = sr.getMinUpperBoundSolution();
-                final Solution maxLowerBoundSolution = sr.getMaxLowerBoundSolution();
-                final SolutionSet result = new SolutionSet(problemSet, fjsstt, minUpperBoundSolution, maxLowerBoundSolution);
-                return Response.ok(result).build();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
-    }
-
-    /**
      * make sure, that we execute one run and only one valid run
      * since the id is important to identify the problem, we have to correct the config beforehand
      *
@@ -187,16 +162,6 @@ public class SolverAsyncREST {
         }
         problemSet.setProperties(config);
         return problemSet;
-    }
-
-    private class LocalTimeoutHandler implements TimeoutHandler {
-        LocalTimeoutHandler() {
-        }
-
-        @Override
-        public void handleTimeout(AsyncResponse resp) {
-            resp.resume(Response.status(Response.Status.OK).entity(ModelFactory.emptySolutionSet()).build());
-        }
     }
 
 }
