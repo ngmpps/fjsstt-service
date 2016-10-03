@@ -21,7 +21,9 @@ function initSolver()  {
               success: function(data,status,xhr){
                 $("#output_"+targetId).text(JSON.stringify(data.solution,null, 2));
                 // text is required if return values contain no proper html
-                $("#status_"+targetId).text(status+ ": " + data.name);
+                $("#status_"+targetId).text(status);
+                $("#name_"+targetId).text(data.name);
+                $("#bounds_"+targetId).text("[ " + data.minUpperBoundSolution + " : " + data.maxLowerBoundSolution + " ]");
               },
               error: function (jqXHR, status, errorThrown){
                 // text is required if return values contain no proper html
