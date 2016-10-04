@@ -24,7 +24,7 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -39,7 +39,7 @@ public class SolverAsyncREST {
 
     private final static Logger log = LoggerFactory.getLogger(SolverAsyncREST.class);
 
-    private final static Map<String, String> imageTable = new Hashtable<String, String>();
+    private final static Map<String, String> imageTable = new ConcurrentHashMap<String, String>();
 
     private static ActorHelper ah = null;
 

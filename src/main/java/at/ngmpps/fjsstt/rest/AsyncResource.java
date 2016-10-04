@@ -3,7 +3,7 @@ package at.ngmpps.fjsstt.rest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -46,7 +46,7 @@ public class AsyncResource {
 
 	final static Logger log = LoggerFactory.getLogger(AsyncResource.class);
 	
-	final static Map<String,String> imageTable = new Hashtable<String, String>();
+	final static Map<String,String> imageTable = new ConcurrentHashMap<String, String>();
 
 	static ActorHelper ah = null;
 
