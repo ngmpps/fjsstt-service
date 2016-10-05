@@ -61,8 +61,15 @@ function performAction(page) {
 
 	switch (page) {
 	    // optional: do something on page load
-	    case "dpc-testing": initSolver();
-	    case "dpc-testing2": initSolver2();
+	    case "dpc-testing":
+			initSolver();
+			break;
+		case "dpc-visualization":
+			initSolver3();
+			break;
+	    case "dpc-testing2":
+			initSolver2();
+			break;
 		default:
 			break;
 	}
