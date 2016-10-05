@@ -23,6 +23,7 @@ function initSolver()  {
                 // text is required if return values contain no proper html
                 $("#status_"+targetId).text(status);
                 $("#name_"+targetId).text(data.name);
+                $("#problem_"+targetId).text(data.problemId);
                 $("#bounds_"+targetId).text("[ " + data.minUpperBoundSolution + " : " + data.maxLowerBoundSolution + " ]");
               },
               error: function (jqXHR, status, errorThrown){
@@ -30,6 +31,41 @@ function initSolver()  {
                 $("#output_"+targetId).text("");
                 // text is required if return values contain no proper html
                 $("#status_"+targetId).text(status + ": " + errorThrown);
+              },
+              contentType: "application/json"
+            });
+    });
+}
+
+function initSolver2()  {
+    $("#get_running").click(function(event) {
+
+        $.ajax({
+              type: "GET",
+              url: "rest/solver/statusrunning",
+              success: function(data,status,xhr){
+            	  //var json = $.parseJSON(data);
+            	  $("#results_running").html("<td colspan='2'>" + data + "</td>");
+              },
+              error: function (jqXHR, status, errorThrown){
+                // text is required if return values contain no proper html
+                $("#results_running").text(status + ": " + errorThrown);
+              },
+              contentType: "application/json"
+            });
+    });
+    $("#get_finished").click(function(event) {
+
+        $.ajax({
+              type: "GET",
+              url: "rest/solver/statusfinished",
+              success: function(data,status,xhr){
+            	  //var json = $.parseJSON(data);
+            	  $("#results_finished").html("<td colspan='2'>" + data + "</td>");
+              },
+              error: function (jqXHR, status, errorThrown){
+                // text is required if return values contain no proper html
+                $("#results_finished").text(status + ": " + errorThrown);
               },
               contentType: "application/json"
             });

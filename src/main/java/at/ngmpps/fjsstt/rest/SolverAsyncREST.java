@@ -1,5 +1,30 @@
 package at.ngmpps.fjsstt.rest;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.CompletionCallback;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import at.ngmpps.fjsstt.factory.ModelFactory;
 import at.ngmpps.fjsstt.factory.ProblemParser;
 import at.ngmpps.fjsstt.model.ProblemSet;
@@ -10,25 +35,6 @@ import at.profactor.NgMPPS.ActorHelper;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
 import at.profactor.NgMPPS.DualProblem.SubgradientSearch;
 import at.profactor.NgMPPS.UI.ConsoleProblemVisualiser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.CompletionCallback;
-import javax.ws.rs.container.Suspended;
-import javax.ws.rs.container.TimeoutHandler;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Path("/solver")
 @Singleton
@@ -163,5 +169,39 @@ public class SolverAsyncREST {
         problemSet.setProperties(config);
         return problemSet;
     }
-
+    
+    @GET
+    @Path("/statusfinished")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getFinishedSolutions() throws InterruptedException {
+   	 checkStartActors();
+   	 List<SolutionReady> sol = ah.getFinishedSolutions(); 
+   	 List<SolutionSet> result = new ArrayList<SolutionSet>(sol.size());
+   	 for(int i=0;i<sol.size();++i) {
+   		 result.add(i, new SolutionSet());
+   		 result.get(i).setName("Solution for Problem #"+sol.get(i).getProblemId());
+   		 result.get(i).setProblemId(sol.get(i).getProblemId());
+   		 result.get(i).setMaxLowerBoundSolution(sol.get(i).getMaxLowerBoundSolution().getObjectiveValue());
+   		 result.get(i).setMinUpperBoundSolution(sol.get(i).getMinUpperBoundSolution().getObjectiveValue());
+   	 } 
+   	 GenericEntity<List<SolutionSet>> entity = new GenericEntity<List<SolutionSet>>(result) {};
+   	 return Response.status(Response.Status.OK).entity(entity).build();
+    }
+    @GET
+    @Path("/statusrunning")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRunningSolutions() throws InterruptedException {
+   	 checkStartActors();
+   	 List<SolutionReady> sol = ah.getRunningSolutions(); 
+   	 List<SolutionSet> result = new ArrayList<SolutionSet>(sol.size());
+   	 for(int i=0;i<sol.size();++i) {
+   		 result.add(i, new SolutionSet());
+   		 result.get(i).setName("Solution for Problem #"+sol.get(i).getProblemId());
+   		 result.get(i).setProblemId(sol.get(i).getProblemId());
+   		 result.get(i).setMaxLowerBoundSolution(sol.get(i).getMaxLowerBoundSolution().getObjectiveValue());
+   		 result.get(i).setMinUpperBoundSolution(sol.get(i).getMinUpperBoundSolution().getObjectiveValue());
+   	 } 
+   	 GenericEntity<List<SolutionSet>> entity = new GenericEntity<List<SolutionSet>>(result) {};
+   	 return Response.status(Response.Status.OK).entity(entity).build();
+    }
 }
