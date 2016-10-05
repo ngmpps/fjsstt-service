@@ -45,7 +45,13 @@ function initSolver2()  {
               url: "rest/solver/statusrunning",
               success: function(data,status,xhr){
             	  //var json = $.parseJSON(data);
-            	  $("#results_running").html("<td colspan='2'>" + data + "</td>");
+            	  var html = "<td colspan='2'>"
+            	  for (var i=0; i<data.length; i++) {
+                    html += data[i].name + " (" +  data[i].problemId + ") ["
+                    html += data[i].maxLowerBoundSolution+";"+data[i].minUpperBoundSolution+"]<br/>"
+            	  }
+            	  html += "<td>"
+            	  $("#results_running").html(html);
               },
               error: function (jqXHR, status, errorThrown){
                 // text is required if return values contain no proper html
@@ -61,7 +67,13 @@ function initSolver2()  {
               url: "rest/solver/statusfinished",
               success: function(data,status,xhr){
             	  //var json = $.parseJSON(data);
-            	  $("#results_finished").html("<td colspan='2'>" + data + "</td>");
+                  var html = "<td colspan='2'>"
+                  for (var i=0; i<data.length; i++) {
+                    html += data[i].name + " (" +  data[i].problemId + ") ["
+                    html += data[i].maxLowerBoundSolution+";"+data[i].minUpperBoundSolution+"]<br/>"
+                  }
+                  html += "<td>"
+            	  $("#results_finished").html(html);
               },
               error: function (jqXHR, status, errorThrown){
                 // text is required if return values contain no proper html
