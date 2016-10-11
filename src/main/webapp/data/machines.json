@@ -1,0 +1,95 @@
+{"machines": [
+{
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/3D-printer",
+        "http://dbpedia.org/resource/Fused_deposition_modeling"
+      ],
+      "id": 1,
+      "name": "Ultimaker 2",
+      "availability": true
+ },
+ 
+ {
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/3D-printer",
+        "http://dbpedia.org/resource/Fused_deposition_modeling"
+      ],
+      "id": 2,
+      "name": "Ultimaker 2",
+      "availability": true
+ },
+ 
+ {
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/Assembler"
+      ],
+      "id": 3,
+      "name": "Ultimaker 2",
+      "availability": true
+ },
+ 
+ {
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/circuit_board_production",
+        "http://dbpedia.org/resource/Category:Printed_circuit_board_manufacturing"
+      ],
+      "id": 4,
+      "name": "Ultimaker 2",
+      "availability": true
+ },
+ 
+ {
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/Circuit_board_production",
+        "http://dbpedia.org/resource/Category:Printed_circuit_board_manufacturing"
+      ],
+      "id": 5,
+      "name": "Ultimaker 2",
+      "availability": true
+ },
+ 
+ {
+     "@context": {
+        "meta": "http://dbpedia.org/resource/Metadata",
+        "model": "http://schema.org/ProductModel",
+        "name": "http://schema.org/name"
+      },
+      "@type": [
+        "http://dbpedia.org/resource/Milling_(machining)"
+      ],
+      "id": 6,
+      "name": "Ultimaker 2",
+      "availability": true
+ }
+ 
+
+ ]}
+ 
+ 
+ 
+ 

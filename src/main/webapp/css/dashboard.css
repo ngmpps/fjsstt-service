@@ -118,3 +118,16 @@ textarea {
     max-height: 140px;
     max-width: 340px;
 }
+
+.input-group-addon {
+	min-width:200px !important;
+}
+
+.space {
+	margin-bottom:10px;
+}
+
+.form-control {
+	height: auto !important;
+	min-height: 34px;
+}

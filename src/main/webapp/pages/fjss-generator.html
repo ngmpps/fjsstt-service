@@ -1,0 +1,84 @@
+<h1 class="page-header">FJSS Generator</h1>
+
+
+<h2 class="sub-header">Submit Job List</h2>
+
+<button class="btn btn-primary" onclick="$('#jobModal').modal()">Add Job</button> 
+<button class="btn btn-primary" onclick="generateFJSS()">Generate FJSS</button>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Job</th>
+            <th>Operations</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="job-list">
+		</tbody>
+	</table>
+</div>
+
+<div id="fjss">
+</div>
+
+<div  class="modal fade" id="jobModal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Add Job</h4>
+			</div>
+			<div class="modal-body">
+				<div class="input-group space">
+					<span class="input-group-addon">Start Time</span>
+					<input id="jobStartTime" type="number" min="1" step="1" class="form-control">
+				</div>
+				<div class="input-group space">
+					<span class="input-group-addon">Due Date</span>
+					<input id="jobDueDate" type="number" min="1" step="1" class="form-control">
+				</div>
+				<div class="input-group">
+					<span class="input-group-addon">Weighting</span>
+					<input id="jobWeighting" type="number" min="1" step="1" class="form-control">
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+				<button onclick="addJob()" data-dismiss="modal" class="btn btn-success" type="button">Add</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div  class="modal fade" id="operationModal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Add Operation</h4>
+			</div>
+			<div class="modal-body">
+				<div class="input-group space">
+					<span class="input-group-addon">ID</span>
+					<input id="operationId" type="number" min="1" step="1" class="form-control">
+				</div>
+				<div class="input-group">
+					<span class="input-group-addon">Requires</span>
+					<div class="form-control">
+						<label><input id="req_3d" type="checkbox" value="http://dbpedia.org/resource/3D-printer"> 3D Printer</label><br/>
+						<label><input id="req_assem" type="checkbox" value="http://dbpedia.org/resource/Assembler"> Assembler</label><br/>
+						<label><input id="req_cbp" type="checkbox" value="http://dbpedia.org/resource/circuit_board_production"> Circuit Board Production</label><br/>
+						<label><input id="req_fdm" type="checkbox" value="http://dbpedia.org/resource/Fused_deposition_modeling"> Fused Deposition Modeling</label><br/>
+						<label><input id="req_mill" type="checkbox" value="http://dbpedia.org/resource/Milling_(machining)"> Milling</label><br/>
+						<label><input id="req_pcbm" type="checkbox" value="http://dbpedia.org/resource/Category:Printed_circuit_board_manufacturing"> Printed Circuit Board Manufacturing</label>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+				<button onclick="addOperation()" data-dismiss="modal" class="btn btn-success" type="button">Add</button>
+			</div>
+		</div>
+	</div>
+</div>

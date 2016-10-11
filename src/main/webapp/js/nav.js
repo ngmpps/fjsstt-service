@@ -61,6 +61,9 @@ function performAction(page) {
 
 	switch (page) {
 	    // optional: do something on page load
+		case "fjss-generator":
+			initGenerator();
+			break;
 	    case "dpc-testing":
 			initSolver();
 			break;
