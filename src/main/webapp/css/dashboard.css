@@ -119,6 +119,11 @@ textarea {
     max-width: 340px;
 }
 
+.ta-xy-scrollable {
+	min-height:140px;
+	min-width:340px;
+}
+
 .input-group-addon {
 	min-width:200px !important;
 }

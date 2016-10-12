@@ -1,0 +1,40 @@
+{
+"id": 2,
+"dueDate": 27,
+"weighting": 2,
+"startTime": 0,
+"operations": [
+	{
+		"operationId": 1,
+		"file": "path/to/object.3mf",
+		"requires" : [
+		"http://dbpedia.org/resource/3D-printer",
+		"http://dbpedia.org/resource/Fused_deposition_modeling"
+		]		
+	},
+	{
+		"operationId": 2,
+		"file": "path/to/object.3mf",
+		"requires" : [
+		"http://dbpedia.org/resource/3D-printer",
+		"http://dbpedia.org/resource/Fused_deposition_modeling"
+		]		
+	},
+	{
+		"operationId": 3,
+		"file": "path/to/object.3mf",
+		"requires" : [
+		"http://dbpedia.org/resource/Category:Printed_circuit_board_manufacturing",
+		"http://dbpedia.org/resource/circuit_board_production"
+		]	
+	},
+	{
+		"operationId": 4,
+		"file": "path/to/assembly.3mf",
+		"requires" : [
+		"http://dbpedia.org/resource/Assembler"
+		]		
+	}
+]
+}
+	

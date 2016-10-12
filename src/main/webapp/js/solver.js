@@ -19,18 +19,22 @@ function initSolver()  {
               url: "rest/solver/solution",
               data: JSON.stringify({ fjs: fjsData, transport: transportData, properties: propertiesData }),
               success: function(data,status,xhr){
-                $("#output_"+targetId).text(JSON.stringify(data.solution,null, 2));
+                $("#output").text(JSON.stringify(data.solution,null, 2));
                 // text is required if return values contain no proper html
-                $("#status_"+targetId).text(status);
-                $("#name_"+targetId).text(data.name);
-                $("#problem_"+targetId).text(data.problemId);
-                $("#bounds_"+targetId).text("[ " + data.minUpperBoundSolution + " : " + data.maxLowerBoundSolution + " ]");
+                $("#status").text(status);
+                $("#name").text(data.name);
+                $("#problem").text(data.problemId);
+                $("#bounds").text("[ " + data.minUpperBoundSolution + " : " + data.maxLowerBoundSolution + " ]");
+				$('html, body').animate({
+					scrollTop: $("#output_a").offset().top-50
+				}, 1000);
               },
               error: function (jqXHR, status, errorThrown){
                 // text is required if return values contain no proper html
-                $("#output_"+targetId).text("");
-                // text is required if return values contain no proper html
-                $("#status_"+targetId).text(status + ": " + errorThrown);
+                $("#output").text(status + ": " + errorThrown);
+				$('html, body').animate({
+					scrollTop: $("#output_a").offset().top-50
+				}, 1000);
               },
               contentType: "application/json"
             });
@@ -129,6 +133,47 @@ function initGenerator() {
 		dataType: "json",
 		success: function(response,status,xhr) {
 			machines = response.machines;
+		}
+	});
+}
+
+function loadExampleJobs() {
+	jobs = [];
+	var count = 3;
+	$.ajax({
+		method: "GET",
+		url: "data/job1.json",
+		cache: false,
+		dataType: "json",
+		success: function(response,status,xhr) {
+			jobs.push(response);
+			count--;
+			if (count == 0)
+				showJobList();
+		}
+	});
+	$.ajax({
+		method: "GET",
+		url: "data/job2.json",
+		cache: false,
+		dataType: "json",
+		success: function(response,status,xhr) {
+			jobs.push(response);
+			count--;
+			if (count == 0)
+				showJobList();
+		}
+	});
+	$.ajax({
+		method: "GET",
+		url: "data/job3.json",
+		cache: false,
+		dataType: "json",
+		success: function(response,status,xhr) {
+			jobs.push(response);
+			count--;
+			if (count == 0)
+				showJobList();
 		}
 	});
 }
@@ -245,6 +290,9 @@ function generateFJSS() {
 	}
 	var html = "<textarea style='width:100%; min-height:300px; resize: vertical;'>"+fjss+"</textarea>";
 	$("#fjss").html(html);
+	$('html, body').animate({
+		scrollTop: $("#fjss").offset().top-50
+	}, 1000);
 }
 
 function getRandomTime() {
