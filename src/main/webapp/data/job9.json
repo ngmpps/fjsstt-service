@@ -1,57 +1,59 @@
 {
-"due date": 67,
+"id": 9,
+"dueDate": 67,
 "weighting": 1,
+"startTime": 0,
 "operations": [
 	{
-		"operation_id": 1,
+		"operationId": 1,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
 		"http://dbpedia.org/resource/3D-printer",
 		"http://dbpedia.org/resource/Fused_deposition_modeling"
 		]		
 	},
 	{
-		"operation_id": 2,
+		"operationId": 2,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
 		"http://dbpedia.org/resource/3D-printer",
 		"http://dbpedia.org/resource/Fused_deposition_modeling"
 		]		
 	},
 	{
-		"operation_id": 3,
+		"operationId": 3,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
         "http://dbpedia.org/resource/Milling_(machining)"
 		]		
 	},
 	{
-		"operation_id": 4,
+		"operationId": 4,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
 		"http://dbpedia.org/resource/Category:Printed_circuit_board_manufacturing",
 		"http://dbpedia.org/resource/circuit_board_production"
 		]
 	},
 	{
-		"operation_id": 5,
+		"operationId": 5,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
         "http://dbpedia.org/resource/Milling_(machining)"
 		]		
 	},
 	{
-		"operation_id": 6,
+		"operationId": 6,
 		"file": "path/to/object.3mf",
-		"recquires" : [
+		"requires" : [
 		"http://dbpedia.org/resource/3D-printer",
 		"http://dbpedia.org/resource/Fused_deposition_modeling"
 		]		
 	},
 	{
-		"operation_id": 7,
+		"operationId": 7,
 		"file": "path/to/assembly.3mf",
-		"recquires" : [
+		"requires" : [
 		"http://dbpedia.org/resource/Assembler"
 		]		
 	}

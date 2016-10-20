@@ -139,43 +139,21 @@ function initGenerator() {
 
 function loadExampleJobs() {
 	jobs = [];
-	var count = 3;
-	$.ajax({
-		method: "GET",
-		url: "data/job1.json",
-		cache: false,
-		dataType: "json",
-		success: function(response,status,xhr) {
-			jobs.push(response);
-			count--;
-			if (count == 0)
-				showJobList();
-		}
-	});
-	$.ajax({
-		method: "GET",
-		url: "data/job2.json",
-		cache: false,
-		dataType: "json",
-		success: function(response,status,xhr) {
-			jobs.push(response);
-			count--;
-			if (count == 0)
-				showJobList();
-		}
-	});
-	$.ajax({
-		method: "GET",
-		url: "data/job3.json",
-		cache: false,
-		dataType: "json",
-		success: function(response,status,xhr) {
-			jobs.push(response);
-			count--;
-			if (count == 0)
-				showJobList();
-		}
-	});
+	var count = 10;
+	for (var i=1; i<=10; i++) {
+		$.ajax({
+			method: "GET",
+			url: "data/job"+i+".json",
+			cache: false,
+			dataType: "json",
+			success: function(response,status,xhr) {
+				jobs.push(response);
+				count--;
+				if (count == 0)
+					showJobList();
+			}
+		});
+	}
 }
 
 function addJob() {
