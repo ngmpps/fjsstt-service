@@ -149,17 +149,24 @@ function loadExampleJobs() {
 			success: function(response,status,xhr) {
 				jobs.push(response);
 				count--;
-				if (count == 0)
+				if (count == 0) {
+					jobs.sort(function(a,b){
+						return a.id-b.id;
+					});
 					showJobList();
+				}
 			}
 		});
 	}
 }
 
 function addJob() {
+	var id = Date.now();
 	var startTime = 0;
 	var dueDate = 168;
 	var weighting = 1;
+	if (!isNaN(parseInt($("#jobId").val())))
+		id = parseInt($("#jobId").val());
 	if (!isNaN(parseInt($("#jobStartTime").val())))
 		startTime = parseInt($("#jobStartTime").val());
 	if (!isNaN(parseInt($("#jobDueDate").val())))
@@ -167,11 +174,14 @@ function addJob() {
 	if (!isNaN(parseInt($("#jobWeighting").val())))
 		weighting = parseInt($("#jobWeighting").val());
 	jobs.push({
-		"id":Date.now(),
+		"id":id,
 		"startTime":startTime,
 		"dueDate":dueDate,
 		"weighting":weighting,
 		"operations":[]
+	});
+	jobs.sort(function(a,b){
+		return a.id-b.id;
 	});
 	showJobList();
 }
