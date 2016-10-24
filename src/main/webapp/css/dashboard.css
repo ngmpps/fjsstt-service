@@ -122,6 +122,7 @@ textarea {
 .ta-xy-scrollable {
 	height:150px;
 	width:300px;
+	white-space: pre-wrap;
 }
 
 .input-group-addon {

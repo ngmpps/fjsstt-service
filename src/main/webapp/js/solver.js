@@ -88,7 +88,10 @@ function initSolver2()  {
     });
 }
 
+var fjss_global = "";
 function initSolver3() {
+	if (fjss_global != "")
+		$("#fjs_custom").html(fjss_global);
 	$("[id^='post']").click(function(event) {
         var targetId = event.target.id.split("_")[1];
         var fjsData = $("#fjs_"+targetId)[0].innerText;
@@ -276,11 +279,18 @@ function generateFJSS() {
 		fjss += jobs[i].startTime + " " + jobs[i].dueDate + " " + jobs[i].weighting;
 		fjss += "\n";
 	}
-	var html = "<textarea style='width:100%; min-height:300px; resize: vertical;'>"+fjss+"</textarea>";
+	var html = "<textarea id='fjss-src' class='space' style='width:100%; min-height:300px; resize: vertical; white-space: pre-wrap;'>"+fjss+"</textarea>";
+	html += "<br/><button class='btn btn-primary' onclick='openVisualization()'>Copy to visualization</button>";
 	$("#fjss").html(html);
 	$('html, body').animate({
 		scrollTop: $("#fjss").offset().top-50
 	}, 1000);
+}
+
+function openVisualization() {
+	if ($("#fjss-src").val() != "")
+		fjss_global = $("#fjss-src").val();
+	show("dpc-visualization");
 }
 
 function getRandomTime() {
