@@ -2,7 +2,7 @@
 
 
 <h2 class="sub-header">Submit Scenario</h2>
-<div class="table-responsive">
+<div class="table-responsive"  >
     <table class="table table-striped">
         <thead>
         <tr>
@@ -15,7 +15,9 @@
         </thead>
         <tbody>
         <tr>
-            <td>Custom Scenario</td>
+            <td>Custom Scenario <br/>
+                <button id="post_custom" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
+            </td>
             <td><textarea id="fjs_custom" class="ta-xy-scrollable">
 10 6
 5 4 1 12 2 14 1 12 2 7 1 6 7 3 4 15 5 11 4 8 1 6 11 1 3 8 0 37 1
@@ -83,12 +85,11 @@ SurrogateSearch.NrRuns=10
 SubproblemSolver.MinMaxShiftDistance=50
 SimpleSearch.IterationsUntilFeasibilityRepair=2
 			</textarea></td>
-            <td>
-                <button id="post_custom" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
-            </td>
         </tr>
         <tr>
-            <td>SRFG Scenario</td>
+            <td>SRFG Scenario <br />
+                <button id="post_SRFG" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
+            </td>
             <td><pre id="fjs_SRFG" class="pre-xy-scrollable">15 28
 6 2 2 3 5 5 2 14 4 15 5 3 19 5 20 6 21 8 3 22 4 23 3 24 6 3 25 5 26 4 28 6 3 19 5 20 6 21 8 0 45 1
 6 3 19 5 20 6 21 8 3 25 5 26 4 28 6 3 19 5 20 6 21 8 2 14 4 15 5 3 22 4 23 3 24 6 2 2 3 5 5 0 35 2
@@ -161,12 +162,11 @@ SubproblemSolver.MinMaxShiftDistance=50
 SimpleSearch.IterationsUntilFeasibilityRepair=2
 </pre>
             </td>
-            <td>
-                <button id="post_SRFG" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
-            </td>
         </tr>
         <tr>
-            <td>WT3A Scenario</td>
+            <td>WT3A Scenario<br/>
+                <button id="post_WT3A" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
+            </td>
             <td><pre id="fjs_WT3A" class="pre-xy-scrollable">20	10
 11	1	7	11	1	5	12	1	1	29	3	4	21	7	22	8	21	3	1	22	3	18	9	16	1	1	23	2	5	25	8	26	2	4	18	5	28	1	4	10	3	4	16	7	15	9	26	1	5	10	0	463	2
 12	1	5	22	3	4	27	8	22	9	12	1	1	23	1	2	25	3	1	22	3	18	9	16	2	6	24	9	13	2	1	23	10	12	1	2	24	3	4	16	7	15	9	26	3	4	18	5	24	6	28	2	5	25	8	26	3	1	11	2	10	4	25	0	602	2
@@ -233,9 +233,11 @@ SubproblemSolver.MinMaxSlack = 5
 SubproblemSolver.MinMaxShiftDistance = 50
 </pre>
             </td>
-            <td>
-                <button id="post_WT3A" type="button" class="btn btn-primary btn-sm">POST to /solver</button>
-            </td>
+        </tr>
+        <tr>
+        		<td colspan="5">
+        		<div id="vis"></div>
+        		</td>
         </tr>
         <tr id="output_a">
             <td>
@@ -248,4 +250,5 @@ SubproblemSolver.MinMaxShiftDistance = 50
         </tr>
         </tbody>
     </table>
+    
 </div>

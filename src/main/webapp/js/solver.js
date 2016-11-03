@@ -14,6 +14,8 @@ function initSolver()  {
             propertiesData += $("#properties_"+targetId)[0].value;
         }
 
+        var solution = {};
+        
         $.ajax({
               type: "POST",
               url: "rest/solver/solution",
@@ -28,6 +30,8 @@ function initSolver()  {
 				$('html, body').animate({
 					scrollTop: $("#output_a").offset().top-50
 				}, 1000);
+				solution = data.solution;
+				visualizeSolution(solution);
               },
               error: function (jqXHR, status, errorThrown){
                 // text is required if return values contain no proper html
@@ -35,6 +39,8 @@ function initSolver()  {
 				$('html, body').animate({
 					scrollTop: $("#output_a").offset().top-50
 				}, 1000);
+				solution = {};
+				visualizeSolution(solution);
               },
               contentType: "application/json"
             });
