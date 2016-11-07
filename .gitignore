@@ -15,3 +15,4 @@ hs_err_pid*
 target/
 /SG_output.txt
 /defaultListSchedulingFile.txt
+!/lib/DPC-1.0-SNAPSHOT.jar
