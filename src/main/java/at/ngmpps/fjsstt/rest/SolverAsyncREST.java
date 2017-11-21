@@ -47,14 +47,9 @@ public class SolverAsyncREST {
 
     private final static Map<String, String> imageTable = new ConcurrentHashMap<String, String>();
 
-    private static ActorHelper ah = null;
-
     private void checkStartActors() {
         // switch console output off
         ConsoleProblemVisualiser.printoutStatus = false;
-        if (ah == null) {
-            ah = new ActorHelper();
-        }
     }
 
     @POST
@@ -67,7 +62,7 @@ public class SolverAsyncREST {
         FJSSTTproblem problem = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
         // make sure we have the right ID!!
         problem.setProblemId(problemSet.hashCode());
-        log.debug("problem jobs: {} problem config: {}", problem.getJobs(), problem.getConfigurations());
+        log.debug("problem config: {}", problem.getConfigurations());
 
         // after 20 Seconds, an empty SolutionSet is returned, if none is available.
         asyncResponse.setTimeoutHandler(new TimeoutHandler() {
@@ -100,7 +95,7 @@ public class SolverAsyncREST {
                 SolutionReady sr = null;
                 SolutionSet solset = ModelFactory.emptySolutionSet();
                 try {
-                    sr = ah.getCurrentSolution(problemSet.hashCode());
+                    sr = ActorHelper.getCurrentSolution(problemSet.hashCode());
                     solset = new SolutionSet(problemSet, problem, sr.getMinUpperBoundSolution(), sr.getMaxLowerBoundSolution());
                     asyncResponse.resume(solset);
                 } catch (Exception e) {
@@ -113,7 +108,7 @@ public class SolverAsyncREST {
                             // starting the algo all the time  (timeout is ~10secs)
                             // solve might return the first solution found or wait for the
                             // final results -> last boolean true = waitForEndResults
-                            sr = ah.solve(problem, problem.getConfigurations(), 500, false, false);
+                            sr = ActorHelper.solve(problem, problem.getConfigurations(), 500, false, false);
                         }
                         // we got a solution before the timeout, we can return it!
                         if (sr != null) {
@@ -175,7 +170,7 @@ public class SolverAsyncREST {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFinishedSolutions() throws InterruptedException {
    	 checkStartActors();
-   	 List<SolutionReady> sol = ah.getFinishedSolutions(); 
+   	 List<SolutionReady> sol = ActorHelper.getFinishedSolutions(); 
    	 List<SolutionSet> result = new ArrayList<SolutionSet>(sol.size());
    	 for(int i=0;i<sol.size();++i) {
    		 result.add(i, new SolutionSet());
@@ -192,7 +187,7 @@ public class SolverAsyncREST {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getRunningSolutions() throws InterruptedException {
    	 checkStartActors();
-   	 List<SolutionReady> sol = ah.getRunningSolutions(); 
+   	 List<SolutionReady> sol = ActorHelper.getRunningSolutions(); 
    	 List<SolutionSet> result = new ArrayList<SolutionSet>(sol.size());
    	 for(int i=0;i<sol.size();++i) {
    		 result.add(i, new SolutionSet());

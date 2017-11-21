@@ -48,8 +48,6 @@ public class AsyncResource {
 	
 	final static Map<String,String> imageTable = new ConcurrentHashMap<String, String>();
 
-	static ActorHelper ah = null;
-
 	@GET
 	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
 		asyncResponse.setTimeoutHandler(new LocalTimeoutHandler());
@@ -75,12 +73,12 @@ public class AsyncResource {
 	public void checkStartActors() {
 		// switch console output off
 		ConsoleProblemVisualiser.printoutStatus = false;
-		if (ah == null) {
-				ah = new ActorHelper();
-		}
+//		if (ah == null) {
+//				ah = new ActorHelper();
+//		}
 	}
 	public void getSolution(ProblemSet problemSet, AsyncResponse asyncResponse) {
-		new Thread(new TriggerSolution(ah, problemSet, asyncResponse)).start();
+		new Thread(new TriggerSolution( problemSet, asyncResponse)).start();
 	}
 
 	/**
@@ -146,7 +144,7 @@ public class AsyncResource {
 				// first get Solution with all values, then the files
 				SolutionReady sr = null;
 				try{
-					sr = ah.getCurrentSolution(problemSet.hashCode());
+					sr = ActorHelper.getCurrentSolution(problemSet.hashCode());
 				} catch (Exception e) {
 					// here we do nothing, but start a new algorithm
 
@@ -164,13 +162,13 @@ public class AsyncResource {
 						problem.setProblemId(problemSet.hashCode());
 						
 						//System.out.println("problem jobs: "+problem.getJobs()+" problem config: " + problem.getConfigurations());
-						sr = ah.solve(problem, problem.getConfigurations(), 500, false, false);
+						sr = ActorHelper.solve(problem, problem.getConfigurations(), 500, false, false);
 					}
 				} catch(Exception e) {
 					e.printStackTrace();
 				}
 				try {
-					SolutionReadyUI srui = ah.getCurrentSolutionFiles(problemSet.hashCode());
+					SolutionReadyUI srui = ActorHelper.getCurrentSolutionFiles(problemSet.hashCode());
 					if(srui!=null) {
 						StringBuilder html = new StringBuilder();
 						// just the html to be inserted in page
@@ -210,7 +208,7 @@ public class AsyncResource {
 		checkConfiguration(problemSet);
 		checkStartActors();
 		try{
-			sr = ah.getCurrentSolution(problemSet.hashCode());
+			sr = ActorHelper.getCurrentSolution(problemSet.hashCode());
 			FJSSTTproblem fjsstt = ProblemParser.parseStrings(problemSet.getFjs(), problemSet.getProperties(), problemSet.getTransport());
 			if(sr != null && fjsstt != null)
 				return Response.ok(new SolutionSet(problemSet, fjsstt, sr.getMinUpperBoundSolution(),sr.getMaxLowerBoundSolution())).build();
@@ -248,12 +246,11 @@ public class AsyncResource {
 	
 	class TriggerSolution implements Runnable {
 
-		final ActorHelper ah;
+		//final ActorHelper ah;
 		final AsyncResponse asyncResponse;
 		final ProblemSet problem;
 
-		public TriggerSolution(final ActorHelper ah, final ProblemSet problem , final AsyncResponse asyncResponse) {
-			this.ah = ah;
+		public TriggerSolution(final ProblemSet problem , final AsyncResponse asyncResponse) {
 			this.asyncResponse = asyncResponse;
 			this.problem = checkConfiguration(problem);
 		}
@@ -263,7 +260,7 @@ public class AsyncResource {
 			// blocks for ~10s - or returns null if no alorithm started to solve this problem
 			SolutionReady sr = null;
 			try{
-				sr = ah.getCurrentSolution(problem.hashCode());
+				sr = ActorHelper.getCurrentSolution(problem.hashCode());
 			} catch (Exception e) {
 				// here we do nothing, but start a new algorithm
 			}
@@ -280,7 +277,7 @@ public class AsyncResource {
 					// starting the algo all the time  (timeout is ~10secs)
 					// solve might return the first solution found or wait for the
 					// final results -> last boolean true = wait
-					sr = ah.solve(fjsstt, fjsstt.getConfigurations(), 500, false, false);
+					sr = ActorHelper.solve(fjsstt, fjsstt.getConfigurations(), 500, false, false);
 				}
 				if (sr != null && fjsstt !=null) {
 					// return a SolutionSet
