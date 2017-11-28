@@ -32,6 +32,7 @@ import at.ngmpps.fjsstt.model.SolutionSet;
 import at.ngmpps.fjsstt.model.problem.FJSSTTproblem;
 import at.ngmpps.fjsstt.model.problem.subproblem.SubproblemSolverConfig;
 import at.profactor.NgMPPS.ActorHelper;
+import at.profactor.NgMPPS.NgMPPSmain;
 import at.profactor.NgMPPS.Actors.Messages.MainSolveProtocol.SolutionReady;
 import at.profactor.NgMPPS.DualProblem.SubgradientSearch;
 import at.profactor.NgMPPS.UI.ConsoleProblemVisualiser;
@@ -48,6 +49,8 @@ public class SolverAsyncREST {
     private final static Map<String, String> imageTable = new ConcurrentHashMap<String, String>();
 
     private void checkStartActors() {
+ 		NgMPPSmain.startGUI = false;
+ 		NgMPPSmain.isRemote = false;
         // switch console output off
         ConsoleProblemVisualiser.printoutStatus = false;
     }
