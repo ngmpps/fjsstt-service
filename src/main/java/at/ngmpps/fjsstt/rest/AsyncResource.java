@@ -3,8 +3,8 @@ package at.ngmpps.fjsstt.rest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -165,7 +165,7 @@ public class AsyncResource {
 						problem.setProblemId(problemSet.hashCode());
 						
 						//System.out.println("problem jobs: "+problem.getJobs()+" problem config: " + problem.getConfigurations());
-						sr = ActorHelper.solve(problem, problem.getConfigurations(), 500, false, false);
+						sr = ActorHelper.solve(problem, problem.getConfigurations(), false, false);
 					}
 				} catch(Exception e) {
 					e.printStackTrace();
@@ -280,7 +280,7 @@ public class AsyncResource {
 					// starting the algo all the time  (timeout is ~10secs)
 					// solve might return the first solution found or wait for the
 					// final results -> last boolean true = wait
-					sr = ActorHelper.solve(fjsstt, fjsstt.getConfigurations(), 500, false, false);
+					sr = ActorHelper.solve(fjsstt, fjsstt.getConfigurations(), false, false);
 				}
 				if (sr != null && fjsstt !=null) {
 					// return a SolutionSet

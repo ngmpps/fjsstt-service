@@ -1,6 +1,7 @@
 package at.ngmpps.fjsstt.rest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -111,7 +112,7 @@ public class SolverAsyncREST {
                             // starting the algo all the time  (timeout is ~10secs)
                             // solve might return the first solution found or wait for the
                             // final results -> last boolean true = waitForEndResults
-                            sr = ActorHelper.solve(problem, problem.getConfigurations(), 500, false, false);
+                            sr = ActorHelper.solve(problem, problem.getConfigurations(), false, false);
                         }
                         // we got a solution before the timeout, we can return it!
                         if (sr != null) {
@@ -190,14 +191,16 @@ public class SolverAsyncREST {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getRunningSolutions() throws InterruptedException {
    	 checkStartActors();
-   	 List<SolutionReady> sol = ActorHelper.getRunningSolutions(); 
+   	 Collection<SolutionReady> sol = ActorHelper.getRunningSolutions(); 
    	 List<SolutionSet> result = new ArrayList<SolutionSet>(sol.size());
-   	 for(int i=0;i<sol.size();++i) {
+   	 int i = -1;
+   	 for(SolutionReady sr : sol) {
+   		 i++;
    		 result.add(i, new SolutionSet());
-   		 result.get(i).setName("Solution for Problem #"+sol.get(i).getProblemId());
-   		 result.get(i).setProblemId(sol.get(i).getProblemId());
-   		 result.get(i).setMaxLowerBoundSolution(sol.get(i).getMaxLowerBoundSolution().getObjectiveValue());
-   		 result.get(i).setMinUpperBoundSolution(sol.get(i).getMinUpperBoundSolution().getObjectiveValue());
+   		 result.get(i).setName("Solution for Problem #"+sr.getProblemId());
+   		 result.get(i).setProblemId(sr.getProblemId());
+   		 result.get(i).setMaxLowerBoundSolution(sr.getMaxLowerBoundSolution().getObjectiveValue());
+   		 result.get(i).setMinUpperBoundSolution(sr.getMinUpperBoundSolution().getObjectiveValue());
    	 } 
    	 GenericEntity<List<SolutionSet>> entity = new GenericEntity<List<SolutionSet>>(result) {};
    	 return Response.status(Response.Status.OK).entity(entity).build();
