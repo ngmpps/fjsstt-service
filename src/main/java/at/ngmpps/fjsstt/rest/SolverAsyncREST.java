@@ -112,7 +112,7 @@ public class SolverAsyncREST {
                             // starting the algo all the time  (timeout is ~10secs)
                             // solve might return the first solution found or wait for the
                             // final results -> last boolean true = waitForEndResults
-                            sr = ActorHelper.solve(problem, problem.getConfigurations(), false, false);
+                            sr = ActorHelper.solve(problem, problem.getConfigurations(), 10, false);
                         }
                         // we got a solution before the timeout, we can return it!
                         if (sr != null) {

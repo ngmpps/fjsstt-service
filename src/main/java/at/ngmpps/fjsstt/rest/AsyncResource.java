@@ -165,7 +165,7 @@ public class AsyncResource {
 						problem.setProblemId(problemSet.hashCode());
 						
 						//System.out.println("problem jobs: "+problem.getJobs()+" problem config: " + problem.getConfigurations());
-						sr = ActorHelper.solve(problem, problem.getConfigurations(), false, false);
+						sr = ActorHelper.solve(problem, problem.getConfigurations(), 10, false);
 					}
 				} catch(Exception e) {
 					e.printStackTrace();
@@ -280,7 +280,7 @@ public class AsyncResource {
 					// starting the algo all the time  (timeout is ~10secs)
 					// solve might return the first solution found or wait for the
 					// final results -> last boolean true = wait
-					sr = ActorHelper.solve(fjsstt, fjsstt.getConfigurations(), false, false);
+					sr = ActorHelper.solve(fjsstt, fjsstt.getConfigurations(), 10, false);
 				}
 				if (sr != null && fjsstt !=null) {
 					// return a SolutionSet
