@@ -105,22 +105,46 @@ public class SolverAsyncREST {
                 } catch (Exception e) {
                     // we need to start a new algorithm
                     log.info("no existing solution for {} - start new algorithm!", problemSet.hashCode());
-                    try {
-                        // nothing found?
-                        if (sr == null) {
-                            // this might cause problems on a slow or occupied server,
-                            // starting the algo all the time  (timeout is ~10secs)
-                            // solve might return the first solution found or wait for the
-                            // final results -> last boolean true = waitForEndResults
-                            sr = ActorHelper.solve(problem, problem.getConfigurations(), 10, false);
-                        }
-                        // we got a solution before the timeout, we can return it!
-                        if (sr != null) {
-                            solset = new SolutionSet(problemSet, problem, sr.getMinUpperBoundSolution(), sr.getMaxLowerBoundSolution());
-                        }
-                        asyncResponse.resume(solset);
-                    } catch (Exception e1) {
-                        e1.printStackTrace();
+                    // wait for 10 timouts..
+                    int loop = 10; 
+                    
+                    while (loop > 0) {
+	                    try {
+	                        // nothing found?
+	                        if (sr == null) {
+	                            // this might cause problems on a slow or occupied server,
+	                            // starting the algo all the time  (timeout is ~10secs)
+	                            // solve might return the first solution found or wait for the
+	                            // final results -> last boolean true = waitForEndResults
+	                            sr = ActorHelper.solve(problem, problem.getConfigurations(), 10, false);
+	                        }
+	                        // we got a solution before the timeout, we can return it!
+	                        if (sr != null) {
+	                            solset = new SolutionSet(problemSet, problem, sr.getMinUpperBoundSolution(), sr.getMaxLowerBoundSolution());
+	                        }
+	                        asyncResponse.resume(solset);
+	                        // done
+	                        loop = 0;
+	                    } catch (java.util.concurrent.TimeoutException TE) {
+	                    	// its ok. try again
+	                    	loop--;
+	                    } catch (Exception e1) {
+	                    	// should we stop?
+	                    	// timeout = 0;
+	                    	// try one more time
+	                    	if(loop > 1)
+	                    		loop = 1;
+	                    	else
+	                    		loop = 0;
+	                        e1.printStackTrace();
+	                    }
+	                    if(loop>0) {
+	                    	try {
+	                    		Thread.sleep(1000);
+	                    	} catch(InterruptedException ie) {
+	                    		// wait a bit to recover; 
+	                    	}
+	                    }
                     }
                 }
             }
